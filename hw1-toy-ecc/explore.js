@@ -106,7 +106,8 @@ async function run() {
   try {
     do {
       pending = false;
-      await new Promise((r) => requestAnimationFrame(() => r())); // let "Running…" paint
+      // let "Running…" paint; the timeout covers background tabs, where rAF never fires
+      await new Promise((r) => { requestAnimationFrame(() => r()); setTimeout(r, 100); });
       await experiment();
     } while (pending);
   } finally {
