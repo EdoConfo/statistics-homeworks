@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Statistics Homeworks</title>
+  <meta name="description" content="Homeworks for the Statistics course of the MSc in Cybersecurity: elliptic-curve scalar multiplication and the Ethereum wallet pipeline, with interactive demos and statistical experiments.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/theme.js"></script>
+  <style>
+    .hw-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    @media (max-width: 820px) { .hw-grid { grid-template-columns: minmax(0, 1fr); } }
+    .hw-card { display: grid; grid-template-rows: auto 1fr; padding: 0; overflow: hidden; }
+    .hw-visual { height: 190px; display: grid; place-items: center; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+    .hw-body { padding: 20px 22px 22px; display: flex; flex-direction: column; gap: 10px; }
+    .hw-body h2 { font-size: 1.35rem; margin: 0; }
+    .hw-body p { margin: 0; color: var(--ink-2); }
+    .hw-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 6px; }
+    .hw-num { font: 600 0.78rem/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-ink); }
+    .curve-mini { width: 200px; height: 180px; }
+    .curve-mini .g { stroke: var(--grid); stroke-width: 1; }
+    .curve-mini .s { fill: var(--series-1); }
+    .curve-mini .o { fill: var(--axis); }
+    .curve-mini .l { stroke: var(--series-2); stroke-width: 1.6; opacity: .85; }
+    .chain { display: grid; gap: 6px; font: 0.82rem/1.3 var(--mono); text-align: center; color: var(--ink-2); }
+    .chain .pill { padding: 5px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border-strong); color: var(--ink); }
+    .chain .arrow { color: var(--muted); font-size: 0.75rem; }
+    .chain .pill.final { background: var(--ink); color: var(--page); border-color: var(--ink); }
+    .about { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 820px) { .about { grid-template-columns: minmax(0, 1fr); } }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><span class="brand-mark">σ</span><span class="brand-text">Statistics · Homeworks</span></a>
+      <nav class="nav" aria-label="Main">
+        <a href="./" aria-current="page" class="hide-sm">Home</a>
+        <a href="hw1-toy-ecc/">HW1</a>
+        <a href="hw2-wallet-pipeline/">HW2</a>
+        <a href="https://github.com/EdoConfo/statistics-homeworks" class="hide-sm">GitHub</a>
+        <button class="theme-toggle" type="button" aria-label="Toggle theme"></button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap hero">
+      <div class="kicker">MSc Cybersecurity · Statistics · A.Y. 2026/27</div>
+      <h1>Cryptography,<br>seen through statistics</h1>
+      <p class="lede">Homework for the Statistics course. Each assignment is an interactive page with working code, an animation or live demo,
+        and Monte Carlo experiments that check what the theory predicts. Everything runs in the browser.</p>
+    </div>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="hw-grid">
+          <a class="card card-link hw-card" href="hw1-toy-ecc/">
+            <div class="hw-visual" aria-hidden="true">
+              <svg class="curve-mini" viewBox="0 0 180 180">
+                <g>
+                  <line class="g" x1="5" y1="5" x2="5" y2="175"/><line class="g" x1="175" y1="5" x2="175" y2="175"/>
+                  <line class="g" x1="5" y1="5" x2="175" y2="5"/><line class="g" x1="5" y1="175" x2="175" y2="175"/>
+                </g>
+                <line class="l" x1="5.0" y1="25.0" x2="9.0" y2="5.0"/><line class="l" x1="9.0" y1="175.0" x2="43.0" y2="5.0"/><line class="l" x1="43.0" y1="175.0" x2="77.0" y2="5.0"/><line class="l" x1="77.0" y1="175.0" x2="111.0" y2="5.0"/><line class="l" x1="111.0" y1="175.0" x2="145.0" y2="5.0"/><line class="l" x1="145.0" y1="175.0" x2="175.0" y2="25.0"/>
+                <circle cx="20" cy="120" r="3.6" class="s"/><circle cx="20" cy="50" r="3.6" class="s"/><circle cx="30" cy="100" r="3.6" class="s"/><circle cx="30" cy="70" r="3.6" class="s"/><circle cx="40" cy="170" r="3.6" class="o"/><circle cx="60" cy="90" r="3.6" class="s"/><circle cx="60" cy="80" r="3.6" class="s"/><circle cx="70" cy="110" r="3.6" class="o"/><circle cx="70" cy="60" r="3.6" class="o"/><circle cx="90" cy="140" r="3.6" class="o"/><circle cx="90" cy="30" r="3.6" class="o"/><circle cx="110" cy="150" r="3.6" class="o"/><circle cx="110" cy="20" r="3.6" class="o"/><circle cx="130" cy="160" r="3.6" class="s"/><circle cx="130" cy="10" r="3.6" class="s"/><circle cx="160" cy="130" r="3.6" class="o"/><circle cx="160" cy="40" r="3.6" class="o"/>
+              </svg>
+            </div>
+            <div class="hw-body">
+              <span class="hw-num">Homework 1</span>
+              <h2>Private key → public key on a toy elliptic curve</h2>
+              <p>Scalar multiplication Q = kG on y² = x³ + 7 (mod 17): point addition, double-and-add, a step-by-step SVG animation, and a statistical
+                look at the outputs. Includes coordinate distributions, bit balance, correlation, avalanche, and what separates a one-way function from a hash.</p>
+              <div class="hw-tags">
+                <span class="chip">secp256k1</span><span class="chip">ECDLP</span><span class="chip">χ² tests</span><span class="chip">avalanche</span><span class="chip">animation</span>
+              </div>
+            </div>
+          </a>
+
+          <a class="card card-link hw-card" href="hw2-wallet-pipeline/">
+            <div class="hw-visual" aria-hidden="true">
+              <div class="chain">
+                <span class="pill">test test test … junk</span>
+                <span class="arrow">BIP-39 · BIP-32 · BIP-44</span>
+                <span class="pill">k = ac0974be…f2ff80</span>
+                <span class="arrow">secp256k1 · Keccak-256 · EIP-55</span>
+                <span class="pill final">0xf39Fd6e5…b92266</span>
+              </div>
+            </div>
+            <div class="hw-body">
+              <span class="hw-num">Homework 2</span>
+              <h2>From seed phrase to Ethereum address</h2>
+              <p>The wallet pipeline step by step: BIP-39, BIP-32, BIP-44, secp256k1, Keccak-256 and EIP-55, each classed as generation, derivation, public-key crypto,
+                hashing, checksum or encoding. Also a live demo, Monte Carlo checks of checksum strength, a timeline, and Keccak vs SHA-3.</p>
+              <div class="hw-tags">
+                <span class="chip">BIP-39/32/44</span><span class="chip">Keccak-256</span><span class="chip">EIP-55</span><span class="chip">Monte Carlo</span><span class="chip">live demo</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="about">
+          <div>
+            <h3>No build step</h3>
+            <p class="muted">Plain HTML, CSS and ES modules served by GitHub Pages. HW1 has no dependencies. HW2 loads pinned builds of the audited
+              <a href="https://paulmillr.com/noble/">noble</a> libraries for the hash and curve primitives. The wallet logic on top of them is written out step by step.</p>
+          </div>
+          <div>
+            <h3>Tested</h3>
+            <p class="muted">The math is checked with <code>node --test</code> against known vectors: the assignment's 6G = (5, 8), BIP-39/BIP-32 test vectors,
+              EIP-55 examples and the Hardhat test accounts. HW2 repeats the checks in the browser on every load.</p>
+          </div>
+          <div>
+            <h3>Educational only</h3>
+            <p class="muted">Toy curves are trivially breakable, and the code is not constant-time. The wallet demo only uses generated or public test phrases.
+              Never type a real recovery phrase into a website.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>Statistics · MSc Cybersecurity</span>
+      <span><a href="https://github.com/EdoConfo/statistics-homeworks">Source on GitHub</a></span>
+    </div>
+  </footer>
+</body>
+</html>
