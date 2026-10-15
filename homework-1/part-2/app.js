@@ -1,7 +1,7 @@
-// Part 2 page controller: live pipeline demo, hash comparison, self-test.
+// Part 2 page controller: live pipeline demo and hash comparison.
 import {
   entropyToMnemonic, indicesToEntropy, checkIndices, mnemonicToSeed, derivePath, addressFromPrivateKey,
-  toChecksumAddress, publicKey, selfTest, bytesToHex, utf8ToBytes, keccak_256, sha3_256, sha256, wordlist,
+  toChecksumAddress, bytesToHex, utf8ToBytes, keccak_256, sha3_256, sha256, wordlist,
   TEST_MNEMONIC, HARDENED,
 } from './wallet.js';
 import { initExperiments } from './experiments.js';
@@ -48,10 +48,8 @@ function randomIndex() {
   return crypto.getRandomValues(new Uint16Array(1))[0] & 2047;
 }
 
-function path() {
-  const i = Math.max(0, Math.min(999, Math.floor(Number($('d-index').value) || 0)));
-  return $('d-scheme').value === 'ledger' ? `m/44'/60'/${i}'/0/0` : `m/44'/60'/0'/0/${i}`;
-}
+// BIP-44 path of the first Ethereum account
+const PATH = "m/44'/60'/0'/0/0";
 
 function render() {
   const { indices } = state;
@@ -106,7 +104,7 @@ function render() {
   $('d-seed-time').textContent = `${ms.toFixed(0)} ms for 2048 HMAC-SHA512 rounds in this browser. Passphrase: ${pass ? `"${pass}"` : 'empty'}.`;
 
   // 4 levels
-  const levels = derivePath(seed, path());
+  const levels = derivePath(seed, PATH);
   const tb = $('d-levels');
   tb.replaceChildren();
   levels.forEach((lv, d) => {
@@ -132,7 +130,6 @@ function render() {
   const hex = bytesToHex(pub);
   const pubEl = $('d-pub');
   pubEl.replaceChildren(span('dim-txt', hex.slice(0, 2) + ' '), document.createTextNode(hex.slice(2, 66) + ' ' + hex.slice(66)));
-  $('d-pubc').textContent = bytesToHex(publicKey(priv, true));
   const h = bytesToHex(hash);
   const mark = document.createElement('mark');
   mark.className = 'hl';
@@ -167,18 +164,9 @@ function initDemo() {
   $('d-abandon').addEventListener('click', () => setPhrase(ABANDON.split(' ')));
   let t;
   $('d-pass').addEventListener('input', () => { clearTimeout(t); t = setTimeout(render, 250); });
-  $('d-scheme').addEventListener('change', render);
-  $('d-index').addEventListener('input', render);
   setPhrase(TEST_MNEMONIC.split(' '));
 }
 
-function initSelfTest() {
-  const results = selfTest();
-  const ok = results.filter((r) => r.ok).length;
-  const el = $('d-selftest');
-  badge(el, ok === results.length ? 'ok' : 'fail', `${ok}/${results.length} known-answer tests pass`);
-  el.title = results.map((r) => `${r.ok ? '✓' : '✗'} ${r.name}`).join('\n');
-}
 
 function initHashCompare() {
   const input = $('h-in');
@@ -197,7 +185,6 @@ function initHashCompare() {
   update();
 }
 
-initSelfTest();
 initDemo();
 initHashCompare();
 initExperiments();

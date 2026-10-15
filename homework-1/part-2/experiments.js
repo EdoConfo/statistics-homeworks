@@ -99,16 +99,12 @@ async function bip39(n) {
 async function eip55(n) {
   const bytes = new Uint8Array(20);
   const lettersHist = new Array(41).fill(0);
-  const trialsByL = new Array(41).fill(0);
-  const passByL = new Array(41).fill(0);
-  let passed = 0, collisions = 0, unchecked = 0, singleCase = 0;
+  let collisions = 0;
   await loop(n, () => {
     crypto.getRandomValues(bytes);
     const lower = bytesToHex(bytes);
     const { checksummed } = toChecksumAddress(lower);
     lettersHist[countLetters(lower)]++;
-    const body = checksummed.slice(2);
-    if (body === body.toLowerCase() || body === body.toUpperCase()) singleCase++;
     // one-character substitution, typed in a random case
     const pos = 2 + randInt(40);
     const old = checksummed[pos].toLowerCase();
@@ -117,19 +113,11 @@ async function eip55(n) {
     if (c > '9' && randInt(2)) c = c.toUpperCase();
     const typed = checksummed.slice(0, pos) + c + checksummed.slice(pos + 1);
     const { valid, hasChecksum } = checkAddress(typed);
-    const L = countLetters(typed);
-    trialsByL[L]++;
-    if (valid) {
-      passed++;
-      if (hasChecksum) { collisions++; passByL[L]++; } else unchecked++;
-    }
+    if (valid && hasChecksum) collisions++;
   }, 'EIP-55 typos');
 
   $('x-eip').replaceChildren(
-    estimateTile('Single-character typo accepted (any reason)', passed, n),
-    estimateTile('…accepted by a checksum collision', collisions, n, P_COLLISION, '(13/16)⁴⁰ ≈ 0.0247%'),
-    estimateTile('…accepted unchecked (typed address is single-case)', unchecked, n),
-    estimateTile('Correct EIP-55 form is single-case', singleCase, n, 2 * P_COLLISION, '2·(13/16)⁴⁰ ≈ 0.049%'),
+    estimateTile('Single-character typo accepted by the checksum', collisions, n, P_COLLISION, '(13/16)⁴⁰ ≈ 0.0247%'),
     tile('Mean letters per address', (lettersHist.reduce((s, c, L) => s + c * L, 0) / n).toFixed(2), 'theory 40 · 6/16 = 15'),
   );
 
@@ -140,17 +128,6 @@ async function eip55(n) {
     expected: range.map((L) => n * binomialPmf(L, 40, 6 / 16)),
     expectedStyle: 'line', observedLabel: 'Observed', expectedLabel: 'Binomial(40, 6/16)',
     xLabel: 'letters L', yLabel: 'addresses', height: 220,
-  });
-  barChart($('x-detect'), {
-    data: range.map((L) => ({ label: String(L), value: passByL[L], tip: `${passByL[L]} collisions in ${trialsByL[L]} typos` })),
-    expected: range.map((L) => trialsByL[L] * 2 ** -L),
-    observedLabel: 'Checksum collisions', expectedLabel: 'typos × 2^−L',
-    xLabel: 'letters L in the typed address', yLabel: 'accepted', height: 220,
-    table: {
-      summary: 'Show data table',
-      headers: ['letters L', 'trials', 'accepted', 'expected'],
-      rows: range.map((L) => [L, trialsByL[L], passByL[L], (trialsByL[L] * 2 ** -L).toFixed(2)]),
-    },
   });
 }
 

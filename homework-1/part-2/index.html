@@ -35,14 +35,6 @@
       <p class="lede">Twelve words become a 0x… address through six standards.
         This page takes the pipeline apart. For each step it shows what kind of operation it is (generation, derivation,
         public-key cryptography, hashing, checksum or encoding), runs it live in the browser, and measures its statistical behaviour.</p>
-      <div class="meta">
-        <span class="chip"><span class="dot" style="--c:var(--cat-gen)"></span>key generation</span>
-        <span class="chip"><span class="dot" style="--c:var(--cat-der)"></span>key derivation</span>
-        <span class="chip"><span class="dot" style="--c:var(--cat-pk)"></span>public-key crypto</span>
-        <span class="chip"><span class="dot" style="--c:var(--cat-hash)"></span>hashing</span>
-        <span class="chip"><span class="dot" style="--c:var(--cat-cs)"></span>checksum</span>
-        <span class="chip"><span class="dot" style="--c:var(--cat-enc)"></span>encoding</span>
-      </div>
     </div>
 
     <!-- 01 ------------------------------------------------------------ -->
@@ -113,12 +105,9 @@
             <p class="muted small">Pipeline: the BIP-39 wordlist, hexadecimal addresses, EIP-55 capitalisation.</p>
           </div>
         </div>
-        <div class="callout insight mt-2">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
-          <p><strong>Generation vs derivation:</strong> generation answers "where does the secret come from?" (randomness). Derivation answers
+        <p class="mt-2 prose"><strong>Generation vs derivation:</strong> generation answers "where does the secret come from?" (randomness). Derivation answers
             "how do I get <em>more</em> keys out of it?" (a deterministic function). A wallet does <em>one</em> generation and unlimited derivations.
             That is why backing up 12 words backs up every account the wallet will ever create.</p>
-        </div>
       </div>
     </section>
 
@@ -126,12 +115,8 @@
     <section class="block" id="demo">
       <div class="wrap">
         <div class="section-head"><span class="section-num">03</span><h2>Live demo: run the pipeline</h2></div>
-        <div class="callout warn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg>
-          <p><strong>Teaching tool, test phrases only.</strong> The demo can only generate new phrases or load public test phrases. There is no field for typing
-            a phrase, and that is deliberate. <strong>Never type a real recovery phrase into any website</strong>, this one included. Everything runs locally in your
-            browser and nothing is sent or stored. The Hardhat and "abandon … about" phrases are public: any funds sent to them are swept by bots within seconds.</p>
-        </div>
+        <p class="section-sub"><strong>Test phrases only.</strong> The demo generates new phrases or loads public test phrases, and runs entirely in the browser.
+          Never type a real recovery phrase into any website.</p>
 
         <div class="card inset demo-controls">
           <div class="controls mb-0">
@@ -143,15 +128,7 @@
             </div>
           </div>
           <div class="controls mb-0 mt-2">
-            <label class="field"><span>BIP-39 passphrase (optional "25th word")</span><input id="d-pass" type="text" autocomplete="off" spellcheck="false" placeholder="empty" style="width:220px"></label>
-            <label class="field"><span>Derivation scheme</span>
-              <select id="d-scheme">
-                <option value="metamask">m/44'/60'/0'/0/i · MetaMask style</option>
-                <option value="ledger">m/44'/60'/i'/0/0 · Ledger Live style</option>
-              </select>
-            </label>
-            <label class="field"><span>Account index i</span><input id="d-index" type="number" min="0" max="999" value="0" style="width:90px"></label>
-            <span id="d-selftest" class="badge pending">running self-test…</span>
+            <label class="field"><span>BIP-39 passphrase (optional "25th word", mixed into the seed)</span><input id="d-pass" type="text" autocomplete="off" spellcheck="false" placeholder="empty" style="width:220px"></label>
           </div>
         </div>
 
@@ -200,9 +177,8 @@
           <li class="step" id="step-pub" style="--c:var(--cat-pk)">
             <div class="step-head"><h3>6 · Public key (secp256k1)</h3><span class="chip"><span class="dot"></span>public-key crypto</span></div>
             <p class="muted small">Q = kG on y² = x³ + 7 over F<sub>p</sub>, p = 2²⁵⁶ − 2³² − 977. This is the same computation as Part 1 on a curve of size ≈ 2²⁵⁶.
-              The uncompressed encoding is <code>04 ‖ X ‖ Y</code>. Since Y is fixed by X up to sign, the compressed form keeps only X and the parity of Y.</p>
+              It is written as <code>04 ‖ X ‖ Y</code>.</p>
             <div class="kv"><span>04 ‖ X ‖ Y</span><code class="break" id="d-pub"></code></div>
-            <div class="kv"><span>compressed</span><code class="break" id="d-pubc"></code></div>
           </li>
 
           <li class="step" id="step-addr" style="--c:var(--cat-hash)">
@@ -233,14 +209,14 @@
         <div class="section-head"><span class="section-num">04</span><h2>The standards and primitives</h2></div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Standard</th><th>Year</th><th>Role and purpose</th><th>Input → output</th><th>Primitive inside</th><th>Kind</th></tr></thead>
+            <thead><tr><th>Standard</th><th>Year</th><th>Role and purpose</th><th>Kind</th></tr></thead>
             <tbody>
-              <tr><td><strong>BIP-39</strong></td><td>2013</td><td>Turns entropy into a phrase humans can write down and re-type, with a checksum against transcription errors. Stretches the phrase into a seed.</td><td class="mono">128–256 bits → 12–24 words → 512-bit seed</td><td>SHA-256 (checksum), PBKDF2-HMAC-SHA512</td><td>encoding, checksum, derivation</td></tr>
-              <tr><td><strong>BIP-32</strong></td><td>2012</td><td>Hierarchical deterministic wallets: a tree of keys from one seed. Extended public keys (xpub) derive child <em>public</em> keys without any private key (watch-only wallets).</td><td class="mono">seed → tree of (key, chain code)</td><td>HMAC-SHA512, secp256k1 point addition</td><td>derivation</td></tr>
-              <tr><td><strong>BIP-44</strong></td><td>2014</td><td>A convention for <em>which</em> branch of the tree to use: <code>m / purpose′ / coin_type′ / account′ / change / index</code>. Ethereum is coin type 60 (SLIP-44). This lets different wallets find the same accounts.</td><td class="mono">m/44′/60′/0′/0/i</td><td>none, it is a convention</td><td>derivation (layout)</td></tr>
-              <tr><td><strong>secp256k1</strong></td><td>2000 (SEC 2)</td><td>Elliptic curve y² = x³ + 7 used for the key pair and ECDSA signatures. Ownership of an account is the ability to sign with k.</td><td class="mono">k (32 B) → Q (64 B)</td><td>scalar multiplication, ECDLP</td><td>public-key crypto</td></tr>
-              <tr><td><strong>Keccak-256</strong></td><td>2008 / 2012</td><td>Ethereum's general hash. Here it compresses the 64-byte public key into a uniform-looking identifier and drives the EIP-55 checksum.</td><td class="mono">any bytes → 32 B (address = last 20 B)</td><td>Keccak-f[1600] sponge</td><td>hashing</td></tr>
-              <tr><td><strong>EIP-55</strong></td><td>2016</td><td>Backward-compatible checksum: uses the case of hex letters, which old software ignores, to catch typos in addresses.</td><td class="mono">40 hex → 40 mixed-case hex</td><td>Keccak-256 of the address text</td><td>checksum, encoding</td></tr>
+              <tr><td><strong>BIP-39</strong></td><td>2013</td><td>Turns entropy into a phrase humans can write down and re-type, with a checksum against transcription errors. Stretches the phrase into a seed.</td><td>encoding, checksum, derivation</td></tr>
+              <tr><td><strong>BIP-32</strong></td><td>2012</td><td>Hierarchical deterministic wallets: a tree of keys from one seed. Extended public keys (xpub) derive child <em>public</em> keys without any private key (watch-only wallets).</td><td>derivation</td></tr>
+              <tr><td><strong>BIP-44</strong></td><td>2014</td><td>A convention for <em>which</em> branch of the tree to use: <code>m / purpose′ / coin_type′ / account′ / change / index</code>. Ethereum is coin type 60 (SLIP-44). This lets different wallets find the same accounts.</td><td>derivation (layout)</td></tr>
+              <tr><td><strong>secp256k1</strong></td><td>2000 (SEC 2)</td><td>Elliptic curve y² = x³ + 7 used for the key pair and ECDSA signatures. Ownership of an account is the ability to sign with k.</td><td>public-key crypto</td></tr>
+              <tr><td><strong>Keccak-256</strong></td><td>2008 / 2012</td><td>Ethereum's general hash. Here it compresses the 64-byte public key into a uniform-looking identifier and drives the EIP-55 checksum.</td><td>hashing</td></tr>
+              <tr><td><strong>EIP-55</strong></td><td>2016</td><td>Backward-compatible checksum: uses the case of hex letters, which old software ignores, to catch typos in addresses.</td><td>checksum, encoding</td></tr>
             </tbody>
           </table>
         </div>
@@ -258,7 +234,7 @@
               <tr><td>Entropy</td><td>Uniform on {0,1}<sup>ENT</sup>, ENT = 128 or 256</td><td>All later uniformity is inherited from here. A biased RNG cannot be repaired downstream: a "uniform-looking" address from 32 bits of entropy is still brute-forceable.</td></tr>
               <tr><td>Mnemonic</td><td>2048<sup>12</sup> = 2<sup>132</sup> word sequences, 2<sup>128</sup> valid</td><td>A random 12-word sequence has a valid checksum with probability 2<sup>−4</sup> = 1/16 (24 words: 2<sup>−8</sup>). The first 11 words are free. Given them, only 128 of the 2048 possible last words are valid.</td></tr>
               <tr><td>Seed</td><td>Pseudo-random 512 bits</td><td>PBKDF2 adds ~11 bits of work (2<sup>11</sup> rounds) but no entropy. A wrong passphrase is <em>undetectable</em>: it gives a different, equally random-looking wallet.</td></tr>
-              <tr><td>BIP-32 child keys</td><td>≈ uniform on [1, n−1]</td><td>I<sub>L</sub> ≥ n happens with probability ≈ 3.7 × 10<sup>−39</sup>. Siblings look independent, but for normal (non-hardened) children k<sub>child</sub> − k<sub>parent</sub> = I<sub>L</sub> is computable from the xpub. Leaking one child private key plus the xpub reveals the parent key, which is why the account levels are hardened.</td></tr>
+              <tr><td>BIP-32 child keys</td><td>≈ uniform on [1, n−1]</td><td>Child keys look independent of each other and of the parent: knowing one account key reveals nothing about the others (for hardened levels).</td></tr>
               <tr><td>Public key</td><td>Uniform over the 2<sup>256</sup>-point group, <em>not</em> over 512-bit strings</td><td>X takes only about half the values below p, and Y is determined by X up to sign. 64 bytes carry about 256 bits of entropy. As in Part 1, the structure is there by design.</td></tr>
               <tr><td>Keccak-256 / address</td><td>≈ uniform on {0,1}<sup>160</sup></td><td>Avalanche: one flipped input bit changes ≈ 128 ± 8 of the 256 output bits. 160-bit addresses give ~2<sup>80</sup> collision resistance (birthday bound) and 2<sup>160</sup> for a second preimage.</td></tr>
               <tr><td>EIP-55</td><td>Letter count L ~ Binomial(40, 6/16), mean 15</td><td>Each letter carries one check bit, so a random error passes with probability E[2<sup>−L</sup>] = (10/16 + 6/16 · ½)<sup>40</sup> = (13/16)<sup>40</sup> ≈ 0.0247%, the figure quoted in EIP-55. All-lowercase and all-uppercase input carry no check at all. By the same formula, about 2 · 0.0247% ≈ 0.05% of addresses have a correct EIP-55 form that <em>is</em> single-case, so validators cannot tell them from unchecked input.</td></tr>
@@ -285,16 +261,9 @@
         <div class="tiles" id="x-bip39"></div>
 
         <h3 class="mt-3">B · EIP-55: how often does a typo pass?</h3>
-        <p class="muted small">A random address gets one character replaced, typed in a random case, and is then validated as wallets do: mixed case must match the checksum,
-          single-case input is accepted unchecked. A typo can get through in two ways. The first is luck: a checksum collision. The second is that the typed address
-          ends up all-lowercase or all-uppercase, so there is nothing to check. That happens when the correct address is itself single-case (≈ 0.049% of addresses),
-          or when the typo replaces its only uppercase or only lowercase letter. The second way adds about 0.05 percentage points, so the total is roughly
-          three times the naive 0.0247%.</p>
+        <p class="muted small">A random address gets one character replaced and is checked against its EIP-55 checksum. Each letter a–f carries one check bit, so a typo passes only when all the letter cases still happen to match: about (13/16)<sup>40</sup> ≈ 0.0247% of the time.</p>
         <div class="tiles" id="x-eip"></div>
-        <div class="grid grid-2">
-          <div><p class="chart-title">Letters per address</p><p class="chart-sub" id="x-letters-sub">number of a–f characters in random addresses vs Binomial(40, 6/16)</p><div id="x-letters"></div></div>
-          <div><p class="chart-title">Checksum collisions by letter count</p><p class="chart-sub">typos accepted with a mixed-case checksum, against typos × 2<sup>−L</sup>: few letters, weak check</p><div id="x-detect"></div></div>
-        </div>
+        <p class="chart-title">Letters per address</p><p class="chart-sub" id="x-letters-sub">number of a–f characters in random addresses vs Binomial(40, 6/16)</p><div id="x-letters"></div>
 
         <h3 class="mt-3">C · Keccak-256 avalanche</h3>
         <div class="grid grid-2">
@@ -318,15 +287,10 @@
     <section class="block" id="timeline">
       <div class="wrap">
         <div class="section-head"><span class="section-num">07</span><h2>Timeline</h2></div>
-        <p class="section-sub">Bold entries are the milestones of the wallet pipeline. The others give context.</p>
+        <p class="section-sub">The milestones of the wallet pipeline, in chronological order.</p>
         <ol class="timeline">
-          <li class="ctx"><span class="year">1976</span><div><strong>Diffie–Hellman</strong> key exchange: the public-key idea.</div></li>
           <li><span class="year">1977</span><div><strong>RSA</strong> (Rivest, Shamir, Adleman): first practical public-key encryption and signature scheme, based on factoring.</div></li>
-          <li class="ctx"><span class="year">1985</span><div><strong>Elliptic-curve cryptography</strong> proposed independently by Koblitz and Miller: same security as RSA with much smaller keys.</div></li>
-          <li class="ctx"><span class="year">1997</span><div><strong>HMAC</strong> (RFC 2104): keyed hashing, the building block of PBKDF2 and BIP-32.</div></li>
-          <li class="ctx"><span class="year">2000</span><div><strong>PBKDF2</strong> (RFC 2898) and <strong>SEC 2</strong>, which publishes the parameters of secp256k1.</div></li>
-          <li><span class="year">2001</span><div><strong>SHA-2 family</strong> (SHA-256, SHA-512) published by NIST, standardized in FIPS 180-2 (2002). Merkle–Damgård design.</div></li>
-          <li class="ctx"><span class="year">2008</span><div><strong>Keccak</strong> is submitted to NIST's SHA-3 competition (opened in 2007). <strong>Bitcoin</strong> is published, and its 2009 software uses secp256k1.</div></li>
+          <li><span class="year">2001</span><div><strong>SHA-2 family</strong> (SHA-256, SHA-512) published by NIST.</div></li>
           <li><span class="year">2012</span><div><strong>Keccak wins SHA-3</strong> (October). <strong>BIP-32</strong> (Wuille): hierarchical deterministic wallets.</div></li>
           <li><span class="year">2013</span><div><strong>BIP-39</strong>: mnemonic code for generating deterministic keys.</div></li>
           <li><span class="year">2014</span><div><strong>BIP-44</strong>: multi-account hierarchy and coin types. Ethereum's yellow paper specifies <strong>Keccak-256</strong> as submitted, with the original padding. The same year NIST's draft FIPS 202 adds domain-separation bits.</div></li>
@@ -348,10 +312,8 @@
               <thead><tr><th></th><th>SHA-2 (SHA-256, SHA-512)</th><th>Keccak / SHA-3</th></tr></thead>
               <tbody>
                 <tr><td>Construction</td><td>Merkle–Damgård: iterate a compression function over blocks</td><td>Sponge: absorb into, then squeeze out of, a 1600-bit state</td></tr>
-                <tr><td>Core</td><td>Davies–Meyer block cipher with modular additions, rotations and XORs (ARX)</td><td>Keccak-f[1600] permutation: θ, ρ, π, χ, ι (bitwise, no additions)</td></tr>
                 <tr><td>Length extension</td><td class="no">Vulnerable: H(m) lets you compute H(m ‖ pad ‖ x). Hence HMAC</td><td class="yes">Not vulnerable: the capacity part of the state is never output</td></tr>
                 <tr><td>256-bit variant</td><td>SHA-256: 512-bit blocks, 64 rounds</td><td>rate 1088 bits, capacity 512 bits, 24 rounds</td></tr>
-                <tr><td>Extendable output</td><td>No</td><td>Yes (SHAKE128/256)</td></tr>
                 <tr><td>In this pipeline</td><td>SHA-256 (BIP-39 checksum), SHA-512 inside HMAC (PBKDF2, BIP-32)</td><td>Keccak-256 (address, EIP-55)</td></tr>
               </tbody>
             </table>
@@ -385,12 +347,9 @@
             </tbody>
           </table>
         </div>
-        <div class="callout insight mt-2">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
-          <p><strong>The deep reason, linking Part 1 and Part 2:</strong> the properties conflict. Public-key cryptography and xpub derivation <em>need</em> algebraic
+        <p class="mt-2 prose"><strong>The deep reason, linking Part 1 and Part 2:</strong> the properties conflict. Public-key cryptography and xpub derivation <em>need</em> algebraic
             structure (a homomorphism). Addresses and checksums <em>need</em> the absence of structure (random-function behaviour). No single primitive can
             be both, so the pipeline alternates between them: structured where structure is useful, hashed where it would leak or bias.</p>
-        </div>
       </div>
     </section>
 
@@ -404,22 +363,16 @@
             <ol>
               <li>Install MetaMask (or Rabby or Rainbow) in the fresh profile and choose <em>import wallet</em> with the Hardhat phrase
                 <code>test test … test junk</code>.</li>
-              <li>The first account should be <code>0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266</code>, the same as the demo above (BIP-39 + BIP-44 path index 0).
-                Adding accounts walks <code>m/44'/60'/0'/0/i</code>: i = 1 gives <code>0x7099…79C8</code>, i = 2 gives <code>0x3C44…93BC</code>.</li>
+              <li>The first account should be <code>0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266</code>, the same as the demo above.</li>
               <li>Import the same phrase into a second wallet app: the same addresses appear. This is BIP-39/32/44 interoperability.</li>
-              <li>Switch the demo's scheme to "Ledger Live style". Account 0 coincides, but later accounts differ because the index sits at the account level
-                <code>m/44'/60'/i'/0/0</code>. The same words can show different accounts in different wallets.</li>
-              <li>Add a BIP-39 passphrase (offered by hardware wallets): a completely unrelated set of addresses appears, with no error message.</li>
             </ol>
           </div>
           <div class="prose">
             <h3>What to look for</h3>
             <ul>
-              <li><strong>Recovery phrase screen:</strong> 12 words from a fixed list of 2048. That is the BIP-39 encoding. Wallets reject a phrase with a bad checksum.</li>
-              <li><strong>"Add account":</strong> a new BIP-32 child. Nothing new needs backing up.</li>
-              <li><strong>Address display:</strong> the mixed case is EIP-55. Pasting the all-lowercase form still works. Many wallets and libraries reject a mixed-case address whose checksum does not match.</li>
-              <li><strong>Signing a transaction:</strong> secp256k1 ECDSA. Once you sign, the public key can be recovered from the signature, so the address no longer hides it.</li>
-              <li><strong>Export private key:</strong> the 32-byte k at the end of the derivation path. It controls one account, while the phrase controls all of them.</li>
+              <li><strong>Recovery phrase screen:</strong> 12 words from a fixed list of 2048, the BIP-39 encoding. A phrase with a bad checksum is rejected.</li>
+              <li><strong>"Add account":</strong> a new BIP-32 child along the BIP-44 path. Nothing new needs backing up.</li>
+              <li><strong>Address display:</strong> the mixed case is the EIP-55 checksum.</li>
             </ul>
           </div>
         </div>

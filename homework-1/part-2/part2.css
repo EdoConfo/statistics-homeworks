@@ -97,7 +97,4 @@ table.levels td.mono { font-size: 0.8rem; }
   content: ""; position: absolute; left: 71px; top: 15px; width: 12px; height: 12px; border-radius: 50%;
   background: var(--accent); box-shadow: 0 0 0 3px var(--page);
 }
-.timeline li.ctx::before { background: var(--surface); border: 2px solid var(--axis); width: 8px; height: 8px; left: 73px; top: 17px; }
 .timeline .year { font: 650 0.95rem var(--mono); text-align: right; padding-top: 2px; }
-.timeline li.ctx .year, .timeline li.ctx > div { color: var(--ink-2); }
-.timeline li.ctx strong { color: var(--ink-2); font-weight: 600; }
