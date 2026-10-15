@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HW2 · Seed to Address</title>
+  <title>Homework 2 · Statistics Homeworks</title>
   <meta name="description" content="The Ethereum wallet pipeline from mnemonic to checksummed address: BIP-39, BIP-32, BIP-44, secp256k1, Keccak-256 and EIP-55, with a live demo and statistical experiments.">
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="hw2.css">
   <script src="../assets/js/theme.js"></script>
+  <script src="../assets/js/layout.js"></script>
   <script type="importmap">
   {
     "imports": {
@@ -25,23 +26,12 @@
   <script type="module" src="app.js"></script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="wrap">
-      <a class="brand" href="../"><span class="brand-mark">σ</span><span class="brand-text">Statistics · Homeworks</span></a>
-      <nav class="nav" aria-label="Main">
-        <a href="../" class="hide-sm">Home</a>
-        <a href="../hw1-toy-ecc/">HW1</a>
-        <a href="./" aria-current="page">HW2</a>
-        <a href="https://github.com/EdoConfo/statistics-homeworks" class="hide-sm">GitHub</a>
-        <button class="theme-toggle" type="button" aria-label="Toggle theme"></button>
-      </nav>
-    </div>
-  </header>
+  <site-header homework="2"></site-header>
 
   <main>
     <div class="wrap hero">
-      <div class="kicker">Homework 2 · Wallet cryptography</div>
-      <h1>From seed phrase<br>to Ethereum address</h1>
+      <div class="kicker">Homework 2</div>
+      <h1>From Wallet Seed to Ethereum Address: Hashing, Key Derivation and Cryptographic Primitives</h1>
       <p class="lede">Twelve words become a 0x… address through six standards.
         This page takes the pipeline apart. For each step it shows what kind of operation it is (generation, derivation,
         public-key cryptography, hashing, checksum or encoding), runs it live in the browser, and measures its statistical behaviour.</p>
@@ -53,18 +43,6 @@
         <span class="chip"><span class="dot" style="--c:var(--cat-cs)"></span>checksum</span>
         <span class="chip"><span class="dot" style="--c:var(--cat-enc)"></span>encoding</span>
       </div>
-      <nav class="toc" aria-label="Sections">
-        <a href="#pipeline">01 Pipeline</a>
-        <a href="#kinds">02 Kinds of operation</a>
-        <a href="#demo">03 Live demo</a>
-        <a href="#standards">04 The standards</a>
-        <a href="#statistics">05 Statistical properties</a>
-        <a href="#experiments">06 Experiments</a>
-        <a href="#timeline">07 Timeline</a>
-        <a href="#hashes">08 SHA-2 vs Keccak/SHA-3</a>
-        <a href="#why">09 Why many primitives</a>
-        <a href="#wallets">10 Real wallets</a>
-      </nav>
     </div>
 
     <!-- 01 ------------------------------------------------------------ -->
@@ -340,7 +318,7 @@
     <section class="block" id="timeline">
       <div class="wrap">
         <div class="section-head"><span class="section-num">07</span><h2>Timeline</h2></div>
-        <p class="section-sub">Bold entries are the milestones listed in the assignment. The others give context.</p>
+        <p class="section-sub">Bold entries are the milestones of the wallet pipeline. The others give context.</p>
         <ol class="timeline">
           <li class="ctx"><span class="year">1976</span><div><strong>Diffie–Hellman</strong> key exchange: the public-key idea.</div></li>
           <li><span class="year">1977</span><div><strong>RSA</strong> (Rivest, Shamir, Adleman): first practical public-key encryption and signature scheme, based on factoring.</div></li>
@@ -449,11 +427,69 @@
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="wrap">
-      <span>Statistics · MSc Cybersecurity · Homework 2</span>
-      <span>Educational demo. Primitives from the audited <a href="https://paulmillr.com/noble/">noble</a> libraries. Never enter a real recovery phrase.</span>
-    </div>
-  </footer>
+  <site-footer></site-footer>
+  <template id="assignment">
+    <h3>HMWK 2 — From Wallet Seed to Ethereum Address: Hashing, Key Derivation and Cryptographic Primitives</h3>
+    <p>Statistical properties</p>
+    <h4>Task</h4>
+    <p>Check the practical cryptographic pipeline used in Ethereum wallets, from a mnemonic phrase to an Ethereum address and
+      briefly describe the role and purpose of the following standards and cryptographic primitives:</p>
+    <ul>
+      <li>BIP-39 — mnemonic sentence and seed generation;</li>
+      <li>BIP-32 — hierarchical deterministic (HD) key derivation;</li>
+      <li>BIP-44 — standard derivation paths for hierarchical deterministic wallets;</li>
+      <li>secp256k1 — elliptic-curve public-key cryptography;</li>
+      <li>Keccak-256 — hash function used in Ethereum address derivation;</li>
+      <li>EIP-55 — mixed-case checksum encoding for Ethereum addresses.</li>
+    </ul>
+    <p>In case try experiencing with software such as metamask, rabby, exodus, rainbow, ... or similar
+      to understand the role of each iece of technology ...</p>
+    <p>A simplified wallet pipeline can be represented as:</p>
+    <pre>Mnemonic
+  ↓ BIP-39
+Seed
+  ↓ BIP-32 / BIP-44
+Private Key
+  ↓ secp256k1
+Public Key
+  ↓ Keccak-256
+Ethereum Address
+  ↓ EIP-55
+Checksummed Address</pre>
+    <p>For the purpose of this homework, distinguish clearly between:</p>
+    <ul>
+      <li>key generation and key derivation;</li>
+      <li>public-key cryptography;</li>
+      <li>hashing;</li>
+      <li>checksums;</li>
+      <li>encoding.</li>
+    </ul>
+    <p>Also briefly discuss the role of each primitive and how the different steps fit together
+      and the statistical properties.</p>
+    <h4>Hints: temporal and historical context</h4>
+    <p>Briefly place these technologies in chronological context.</p>
+    <p>Discuss the approximate historical order of:</p>
+    <ul>
+      <li>RSA — public-key cryptography, introduced in 1977;</li>
+      <li>SHA-2 / SHA-512 — standardized in 2001;</li>
+      <li>BIP-32 — hierarchical deterministic wallets, 2012;</li>
+      <li>BIP-39 — mnemonic code for generating deterministic wallets, 2013;</li>
+      <li>BIP-44 — multi-account hierarchical deterministic wallets, 2014;</li>
+      <li>SHA-3 — standardized by NIST in 2015, based on Keccak;</li>
+      <li>EIP-55 — Ethereum mixed-case checksum addresses, 2016.</li>
+    </ul>
+    <p>Also explain the distinction between:</p>
+    <p>SHA-2 / SHA-512 and Keccak / SHA-3</p>
+    <p>They are related historically and both belong to the family of cryptographic hash functions, but Keccak is the underlying design selected for SHA-3, while Ethereum uses Keccak-256, which is not identical to the standardized SHA3-256 function (because of the padding/domain-separation convention.)</p>
+    <p>Why does the Ethereum wallet pipeline use several different cryptographic techniques instead of using one single algorithm for everything?
+      Explain briefly why:</p>
+    <ul>
+      <li>BIP-39/BIP-32/BIP-44 → key management and derivation</li>
+      <li>secp256k1 → public/private key relationship and digital signatures</li>
+      <li>Keccak-256 → hashing</li>
+      <li>EIP-55 → checksum/error detection</li>
+    </ul>
+    <p>serve different purposes in the overall system.</p>
+  </template>
 </body>
 </html>

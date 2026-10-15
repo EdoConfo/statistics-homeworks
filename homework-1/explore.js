@@ -1,5 +1,5 @@
-// HW1 section 06: statistical exploration of k -> kG.
-import { PRESETS, INF, enumeratePoints, groupOrder, pointOrder, multiples, scalarMult, add, neg, fmt, eq } from './ecc.js';
+// HW1 section 05: statistical exploration of k -> kG.
+import { PRESETS, INF, enumeratePoints, groupOrder, pointOrder, multiples, scalarMult, add, fmt, eq } from './ecc.js';
 import { barChart, scatterChart } from '../assets/js/charts.js';
 import {
   chiSquareTest, pearson, spearman, bitBalance, binomialPmf, randomBelow, fmtP, mean, popcount32, hammingBytes,
@@ -14,7 +14,6 @@ const DEFAULT_COUNTS = {
 };
 const SCATTER_MAX = 2500;
 const AVALANCHE_SAMPLES = 1500;
-const STRUCTURE_TRIALS = 300;
 
 const cache = new Map();
 function curveInfo(key) {
@@ -37,8 +36,6 @@ function toBytes(v, len) {
 async function sha256(bytes) {
   return new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
 }
-
-const bytesToBig = (b) => b.reduce((acc, x) => (acc << 8n) | BigInt(x), 0n);
 
 function tile(label, value, sub) {
   const t = document.createElement('div');
@@ -271,61 +268,7 @@ async function experiment() {
     : 'no valid trials: every bit flip of k lands on 0 (mod n) in a subgroup this small';
   $('s-avh-sub').textContent = `${hdH.length} trials · mean ${mean(hdH).toFixed(2)} of 256 bits (${(100 * fracH).toFixed(1)}%)`;
 
-  // --- structure tests ----------------------------------------------------------------
-  const T = STRUCTURE_TRIALS;
-  const MOD256 = 1n << 256n;
-  let homEC = 0, homH = 0, flipEC = 0, flipH = 0, flipT = 0;
-  const H0 = bytesToBig(await sha256(toBytes(0n, 32)));
-  for (let t = 0; t < T; t++) {
-    const a = randomBelow(n - 1n) + 1n, b = randomBelow(n - 1n) + 1n;
-    if (eq(scalarMult(C, a + b, G), add(C, scalarMult(C, a, G), scalarMult(C, b, G)))) homEC++;
-    const [ha, hb, hab] = await Promise.all([a, b, a + b].map((v) => sha256(toBytes(v, 32))));
-    if (bytesToBig(hab) === (bytesToBig(ha) + bytesToBig(hb)) % MOD256) homH++;
-
-    // skip k2 = 0 (mod n), where both relations hold trivially; tiny subgroups may have no other case
-    let k, i, k2, tries = 0;
-    do {
-      k = randomBelow(n - 1n) + 1n;
-      i = randomBelow(BigInt(L));
-      k2 = k ^ (1n << i);
-    } while (k2 % n === 0n && ++tries < 50);
-    if (k2 % n === 0n) continue;
-    flipT++;
-    const Q = scalarMult(C, k, G);
-    const step = scalarMult(C, 1n << i, G);
-    const predicted = (k >> i) & 1n ? add(C, Q, neg(C, step)) : add(C, Q, step);
-    if (eq(predicted, scalarMult(C, k2, G))) flipEC++;
-    const [hk, hk2, hbit] = await Promise.all([k, k2, 1n << i].map((v) => sha256(toBytes(v, 32))));
-    if (bytesToBig(hk2) === (bytesToBig(hk) ^ bytesToBig(hbit) ^ H0)) flipH++;
-  }
-
-  // collisions: distinct keys (mod n) vs distinct outputs; SHA-256 truncated to bitLen(n) bits
-  const distinctK = [...new Set(sample.map((s) => BigInt(s.k) % n))];
   const distinctQ = new Set(sample.map((s) => fmt(s.Q))).size;
-  const tBits = bitLen(n);
-  const trunc = new Set();
-  for (const k of distinctK) {
-    const h = await sha256(toBytes(k, 32));
-    trunc.add(bytesToBig(h) >> BigInt(256 - tBits));
-  }
-  const D = distinctK.length;
-  const space = 2 ** tBits;
-  const expectedColl = D - space * (1 - (1 - 1 / space) ** D);
-
-  const tb = $('s-structure').tBodies[0];
-  tb.replaceChildren();
-  const row = (cells) => {
-    const tr = tb.insertRow();
-    cells.forEach((c, i) => {
-      const td = tr.insertCell();
-      td.textContent = c;
-      if (i > 0) td.className = 'num mono';
-    });
-  };
-  row(['Homomorphism: f(a + b) = f(a) ⊕ f(b) (EC: point addition; hash: + mod 2²⁵⁶)', `${homEC}/${T} hold`, `${homH}/${T} hold`]);
-  row(['Bit flip predictable from the old output alone (EC: Q ± 2ⁱG; hash: H(m) ⊕ H(2ⁱ) ⊕ H(0))',
-    flipT ? `${flipEC}/${flipT} hold` : 'n/a (subgroup too small)', flipT ? `${flipH}/${flipT} hold` : 'n/a']);
-  row([`Collisions among ${D} distinct keys (hash truncated to ${tBits} bits = size of ⟨G⟩)`, `${D - distinctQ}`, `${D - trunc.size} (birthday ≈ ${expectedColl.toFixed(1)})`]);
 
   // --- tiles ---------------------------------------------------------------------------
   const xsInSub = new Set(subgroup.map((P) => P.x)).size;

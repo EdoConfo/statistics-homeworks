@@ -43,8 +43,20 @@
 .viz-status .op { font: 650 1rem/1.4 var(--mono); color: var(--ink); }
 .viz-status .detail { font: 0.84rem/1.5 var(--mono); color: var(--ink-2); margin-top: 4px; overflow-wrap: anywhere; white-space: pre-line; }
 .viz-log {
-  margin: 12px 0 0; padding: 0 0 0 2.2em; max-height: 210px; overflow: auto;
+  margin: 12px 0 0; padding: 0 0 0 2.2em;
   font-size: 0.8rem; color: var(--ink-2); line-height: 1.7;
 }
 .viz-log li + li { margin-top: 0; }
 .viz-log li.current { color: var(--ink); font-weight: 650; }
+
+/* show data tables in full: the page scrolls, not the table */
+#stats details.data-table .table-wrap { max-height: none; }
+
+/* point-addition formulas: one per row, label on the left */
+.formulas { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; align-items: baseline; text-align: left; }
+.formulas .f-label { font: 600 0.72rem/1.2 var(--mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.formulas .f-note { grid-column: 1 / -1; font-size: 0.85rem; color: var(--ink-2); font-style: italic; margin-top: 2px; }
+
+/* experiment summary: 8 tiles in two even rows of 4 (2 per row on phones) */
+#s-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 720px) { #s-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

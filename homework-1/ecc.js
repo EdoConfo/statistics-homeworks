@@ -225,7 +225,7 @@ export function isPrime(n) {
 
 export const PRESETS = {
   toy17: {
-    label: 'p = 17 (assignment)',
+    label: 'p = 17 (example)',
     curve: makeCurve({ p: 17, b: 7, name: 'y² = x³ + 7 (mod 17)' }),
     G: point(1, 5),
     note: '18 points. p ≡ 2 (mod 3) makes the curve supersingular with exactly p + 1 points; G = (1, 5) has order 9.',

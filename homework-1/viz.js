@@ -270,8 +270,7 @@ export function initViz({ curve: C, G: G0 }) {
     const li = document.createElement('li');
     li.className = 'current';
     li.textContent = `${opTitle(op).padEnd(22)}  ${describe(op)[0]}${op.lambda !== undefined ? `   λ=${op.lambda}` : ''}`;
-    logBox.appendChild(li);
-    li.scrollIntoView({ block: 'nearest' });
+    logBox.appendChild(li);   // the log grows with the page; no auto-scroll, so the page never jumps while playing
   }
 
   function finish() {

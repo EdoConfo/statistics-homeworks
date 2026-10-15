@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Terminal version of HW1: prints G, 2G, ..., kG and the toy public key.
 //
-//   node hw1-toy-ecc/cli.js            # k = 6, G = (1, 5)
-//   node hw1-toy-ecc/cli.js 7
-//   node hw1-toy-ecc/cli.js 123456789012345678901234567890   # double-and-add only
+//   node homework-1/cli.js            # k = 6, G = (1, 5)
+//   node homework-1/cli.js 7
+//   node homework-1/cli.js 123456789012345678901234567890   # double-and-add only
 
 import { PRESETS, multiples, scalarMultTrace, fmt, groupOrder, pointOrder, enumeratePoints } from './ecc.js';
 

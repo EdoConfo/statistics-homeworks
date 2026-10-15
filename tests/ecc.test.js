@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   PRESETS, INF, add, neg, eq, isOnCurve, multiples, scalarMult, scalarMultTrace,
   enumeratePoints, groupOrder, pointOrder, bruteForceLog, isPrime, fmt,
-} from '../hw1-toy-ecc/ecc.js';
+} from '../homework-1/ecc.js';
 
 const { curve: C, G } = PRESETS.toy17;
 

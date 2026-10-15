@@ -3,52 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HW1 · Toy Elliptic Curve</title>
+  <title>Homework 1 · Statistics Homeworks</title>
   <meta name="description" content="Private key to public key with elliptic-curve scalar multiplication on the toy curve y² = x³ + 7 (mod 17): animated double-and-add and a statistical exploration.">
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="hw1.css">
   <script src="../assets/js/theme.js"></script>
+  <script src="../assets/js/layout.js"></script>
   <script type="module" src="app.js"></script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="wrap">
-      <a class="brand" href="../"><span class="brand-mark">σ</span><span class="brand-text">Statistics · Homeworks</span></a>
-      <nav class="nav" aria-label="Main">
-        <a href="../" class="hide-sm">Home</a>
-        <a href="./" aria-current="page">HW1</a>
-        <a href="../hw2-wallet-pipeline/">HW2</a>
-        <a href="https://github.com/EdoConfo/statistics-homeworks" class="hide-sm">GitHub</a>
-        <button class="theme-toggle" type="button" aria-label="Toggle theme"></button>
-      </nav>
-    </div>
-  </header>
+  <site-header homework="1"></site-header>
 
   <main>
     <div class="wrap hero">
-      <div class="kicker">Homework 1 · Public-key cryptography</div>
-      <h1>Private key → public key<br>on a toy elliptic curve</h1>
-      <p class="lede">Ethereum turns a private key <var>k</var> into a public key with one operation:
+      <div class="kicker">Homework 1</div>
+      <h1>Example App: Public-Key Cryptography PRIVATE KEY → PUBLIC KEY in Ethereum</h1>
+      <p class="lede">Ethereum turns a private key <var>k</var> into a public key <var>Q</var> with one operation:
         elliptic-curve scalar multiplication <span class="math">Q = kG</span> on secp256k1.
         This page does the same on the toy curve <span class="math">y² = x³ + 7 (mod 17)</span>,
         animates the algorithm step by step, and runs statistical experiments on the outputs.</p>
-      <div class="meta">
-        <span class="chip mono"><span class="dot"></span>y² = x³ + 7 (mod 17)</span>
-        <span class="chip mono"><span class="dot" style="--c:var(--series-2)"></span>G = (1, 5)</span>
-        <span class="chip mono"><span class="dot" style="--c:var(--series-3)"></span>k = 6</span>
-        <span class="chip mono"><span class="dot" style="--c:var(--series-7)"></span>Q = 6G = (5, 8)</span>
-      </div>
-      <nav class="toc" aria-label="Sections">
-        <a href="#curve">01 The toy curve</a>
-        <a href="#addition">02 Point addition</a>
-        <a href="#compute">03 Computing Q = kG</a>
-        <a href="#viz">04 Slow motion</a>
-        <a href="#inverse">05 The way back</a>
-        <a href="#stats">06 Statistical exploration</a>
-        <a href="#discussion">07 Discussion</a>
-        <a href="#code">08 Code</a>
-      </nav>
     </div>
 
     <!-- 01 ------------------------------------------------------------ -->
@@ -64,22 +38,10 @@
               form a finite abelian group. Its size is <span class="math">#E = 18</span>, and the
               base point <span class="math">G = (1, 5)</span> has <strong>order 9</strong>:
               <span class="math">9G = O</span>, so the multiples of G repeat with period 9.</p>
-            <div class="callout insight">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
-              <div>
-                <p><strong>Why exactly 18 points?</strong> Since <span class="math">17 ≡ 2 (mod 3)</span>, the map
-                  <span class="math">x ↦ x³</span> is a bijection of F<sub>17</sub>. For every y there is exactly one x with
-                  <span class="math">x³ = y² − 7</span>, which gives 17 affine points, plus O: <span class="math">p + 1 = 18</span>.
-                  The curve is <em>supersingular</em>. secp256k1 has <span class="math">p ≡ 1 (mod 3)</span>, and its group has <strong>prime</strong> order
-                  <span class="math">n ≈ 1.16 × 10⁷⁷</span> (cofactor 1).</p>
-                <p>Because 18 = 2 · 3² is not prime, the toy group has subgroups of order 2, 3, 6 and 9, and
-                  a key <var>k</var> only matters modulo the order of G: here <span class="math">k mod 9</span>.</p>
-              </div>
-            </div>
-          </div>
-          <div class="stack">
             <div class="tiles" id="curve-tiles"></div>
-            <div class="table-wrap" style="max-height:420px">
+          </div>
+          <div>
+            <div class="table-wrap">
               <table id="points-table">
                 <thead><tr><th>Point</th><th class="num">Order</th><th>In ⟨G⟩</th><th class="num">Multiple of G</th></tr></thead>
                 <tbody></tbody>
@@ -99,37 +61,38 @@
             <p>The group law is the chord-and-tangent rule. Draw the line through P and Q, find the third
               intersection with the curve, and reflect it across the x-axis. Over F<sub>p</sub> every
               division is a multiplication by a <em>modular inverse</em>, computed with the extended Euclidean algorithm.</p>
-            <div class="math-block">
-              P ≠ Q: &nbsp; λ = (y₂ − y₁) · (x₂ − x₁)⁻¹ &nbsp;&nbsp;|&nbsp;&nbsp; P = Q: &nbsp; λ = (3x₁² + a) · (2y₁)⁻¹<br>
-              x₃ = λ² − x₁ − x₂ &nbsp;&nbsp;&nbsp; y₃ = λ(x₁ − x₃) − y₁ &nbsp;&nbsp;&nbsp; (all mod p)
+            <p>When P and Q are the same point (doubling, P + P = 2P) there is no line through two distinct points:
+              use the <em>tangent</em> to the curve at P instead, then continue in the same way.</p>
+            <div class="math-block formulas">
+              <span class="f-label">slope, P ≠ Q</span><span>λ = (y₂ − y₁) · (x₂ − x₁)⁻¹</span>
+              <span class="f-label">slope, P = Q</span><span>λ = (3x₁² + a) · (2y₁)⁻¹</span>
+              <span class="f-label">result x</span><span>x₃ = λ² − x₁ − x₂</span>
+              <span class="f-label">result y</span><span>y₃ = λ(x₁ − x₃) − y₁</span>
+              <span class="f-note">all computations mod p</span>
             </div>
             <p>Special cases: <span class="math">P + O = P</span>, and
               <span class="math">P + (−P) = O</span>, where <span class="math">−(x, y) = (x, −y mod p)</span>
               (the line is vertical and "meets the curve at infinity").</p>
-            <p><strong>Worked example, 2G.</strong> With <span class="math">G = (1, 5)</span>, a = 0:
-              <span class="math">λ = 3·1² · (2·5)⁻¹ = 3 · 10⁻¹ = 3 · 12 = 36 ≡ 2</span> (since 10 · 12 = 120 ≡ 1 mod 17).
-              Then <span class="math">x₃ = 2² − 1 − 1 = 2</span> and <span class="math">y₃ = 2(1 − 2) − 5 = −7 ≡ 10</span>,
-              so <span class="math">2G = (2, 10)</span>.</p>
+            <p>The program on the right adds any two points of the toy curve and prints every step of the computation.
+              It starts with <span class="math">G + G = 2G</span>.</p>
           </div>
-          <div>
-<pre><code>// ecc.js (excerpt)
-export function addDetailed(C, P, Q) {
-  const { p, a } = C;
-  if (P === INF) return { kind: 'identity', result: Q };
-  if (Q === INF) return { kind: 'identity', result: P };
-  if (P.x === Q.x &amp;&amp; mod(P.y + Q.y, p) === 0n)
-    return { kind: 'inverse', result: INF };      // P + (-P) = O
-
-  const doubling = P.x === Q.x &amp;&amp; P.y === Q.y;
-  const num = doubling ? 3n * P.x * P.x + a : Q.y - P.y;
-  const den = doubling ? 2n * P.y           : Q.x - P.x;
-  const lambda = mod(num * inv(den, p), p);
-  const x3 = mod(lambda * lambda - P.x - Q.x, p);
-  const y3 = mod(lambda * (P.x - x3) - P.y, p);
-  return { kind: doubling ? 'double' : 'add', lambda,
-           result: { x: x3, y: y3 } };
-}</code></pre>
-            <p class="small muted">Simplified excerpt. The full version also returns the line and the third intersection point used by the animation.</p>
+          <div class="stack">
+            <div class="controls mb-0">
+              <label class="field"><span>P</span><select id="a-p"></select></label>
+              <label class="field"><span>Q</span><select id="a-q"></select></label>
+            </div>
+            <div class="btn-row">
+              <button class="btn" type="button" data-pq="1,5|1,5">G + G</button>
+              <button class="btn" type="button" data-pq="2,10|1,5">2G + G</button>
+              <button class="btn" type="button" data-pq="1,5|1,12">G + (−G)</button>
+              <button class="btn" type="button" data-pq="1,5|O">G + O</button>
+            </div>
+            <div class="keyout">
+              <span class="label">P + Q</span>
+              <span class="value" id="a-key-value"></span>
+              <span class="sub" id="a-key-sub"></span>
+            </div>
+            <pre class="console console-wrap" id="a-out" aria-live="polite"></pre>
           </div>
         </div>
       </div>
@@ -141,7 +104,9 @@ export function addDetailed(C, P, Q) {
         <div class="section-head"><span class="section-num">03</span><h2>Computing Q = kG</h2></div>
         <p class="section-sub">Scalar multiplication is repeated addition, <span class="math">kG = G + G + … + G</span>.
           Adding one G at a time costs k − 1 additions. <strong>Double-and-add</strong> reads the bits of k and costs at most
-          2·log₂k operations. This is what makes secp256k1 practical with k ≈ 2²⁵⁶.</p>
+          2·log₂k operations. This is what makes secp256k1 practical with k ≈ 2²⁵⁶.
+          For example, if we take the base point <span class="math">G = (1, 5)</span> and the private key <span class="math">k = 6</span>,
+          we get the toy public key <span class="math">Q = 6G = (5, 8)</span>.</p>
         <div class="controls">
           <label class="field"><span>Base point G</span><select id="c-base"></select></label>
           <label class="field"><span>Private key k</span><input id="c-k" type="text" inputmode="numeric" class="mono" value="6" size="22" autocomplete="off" spellcheck="false"></label>
@@ -158,7 +123,7 @@ export function addDetailed(C, P, Q) {
           </div>
         </div>
         <div class="split">
-          <pre class="console" id="c-out" aria-live="polite"></pre>
+          <pre class="console console-wrap" id="c-out" aria-live="polite"></pre>
           <div class="stack">
             <div class="keyout" id="c-key">
               <span class="label">Toy public key</span>
@@ -216,44 +181,11 @@ export function addDetailed(C, P, Q) {
     </section>
 
     <!-- 05 ------------------------------------------------------------ -->
-    <section class="block" id="inverse">
-      <div class="wrap">
-        <div class="section-head"><span class="section-num">05</span><h2>The way back: why Q does not reveal k</h2></div>
-        <div class="split">
-          <div class="prose">
-            <p>Going forward is cheap. Going backward, from Q to k, is the <strong>Elliptic Curve Discrete Logarithm Problem</strong> (ECDLP).
-              No method is known that does much better than generic algorithms such as Pollard's rho, which need about
-              <span class="math">√n</span> group operations.</p>
-            <p>On the toy curve the "hard" problem is trivial: just try k = 1, 2, 3, … until kG = Q.
-              The one-way property comes from the <em>size</em> of the group, not from the formulas.</p>
-            <div class="controls">
-              <label class="field"><span>Target public key Q</span><select id="i-target"></select></label>
-              <button class="btn primary" type="button" id="i-run">Brute-force k</button>
-            </div>
-            <pre class="console" id="i-out" style="max-height:200px"></pre>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Curve</th><th class="num">Group order n</th><th class="num">Forward: kG</th><th class="num">Backward (~√n)</th></tr></thead>
-              <tbody>
-                <tr><td>toy, p = 17, ⟨G⟩</td><td class="num">9</td><td class="num">≤ 8 ops</td><td class="num">≤ 9 tries</td></tr>
-                <tr><td>toy, p = 65173</td><td class="num">65 647</td><td class="num">≤ 32 ops</td><td class="num">≈ 256</td></tr>
-                <tr><td>secp256k1</td><td class="num">≈ 1.16 × 10⁷⁷</td><td class="num">≤ 512 ops</td><td class="num">≈ 2¹²⁸ ≈ 3 × 10³⁸</td></tr>
-              </tbody>
-            </table>
-            <p class="small muted" style="padding:10px 12px 0">At 10¹² group operations per second, 2¹²⁸ operations take about 10¹⁹ years,
-              roughly 10⁹ times the age of the universe.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 06 ------------------------------------------------------------ -->
     <section class="block" id="stats">
       <div class="wrap">
-        <div class="section-head"><span class="section-num">06</span><h2>Statistical exploration</h2></div>
-        <p class="section-sub">Run the experiment for many private keys and look at the public keys as data. The p = 17 curve
-          is the assignment. The larger curves use the same equation with prime group order, as on secp256k1, and give the statistics more room.</p>
+        <div class="section-head"><span class="section-num">05</span><h2>Statistical exploration</h2></div>
+        <p class="section-sub">Run the experiment for many private keys and look at the public keys as data. The example
+          curve is p = 17. The larger curves use the same equation with prime group order, as on secp256k1, and give the statistics more room.</p>
 
         <div class="card inset">
           <div class="controls mb-0">
@@ -306,31 +238,20 @@ export function addDetailed(C, P, Q) {
           <div><p class="chart-title">EC scalar multiplication · changed bits of x‖y</p><p class="chart-sub" id="s-av-sub"></p><div id="s-av"></div></div>
           <div><p class="chart-title">SHA-256 of k · changed bits of the digest</p><p class="chart-sub" id="s-avh-sub"></p><div id="s-avh"></div></div>
         </div>
-
-        <h3 class="mt-3">5 · Structure test: what a statistic cannot see</h3>
-        <div class="table-wrap">
-          <table id="s-structure">
-            <thead><tr><th>Relation tested on random inputs</th><th class="num">EC: k ↦ kG</th><th class="num">Hash: m ↦ SHA-256(m)</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <p class="small muted mt-1">The bit-flip relation means that anyone who knows Q can compute the public key of k ⊕ 2ⁱ without knowing k,
-          because it is either Q + 2ⁱG or Q − 2ⁱG. The avalanche histogram above looks "random" anyway: avalanche statistics measure
-          how much the output changes, not whether the change is predictable.</p>
       </div>
     </section>
 
-    <!-- 07 ------------------------------------------------------------ -->
+    <!-- 06 ------------------------------------------------------------ -->
     <section class="block" id="discussion">
       <div class="wrap">
-        <div class="section-head"><span class="section-num">07</span><h2>Discussion: one-way function vs hash function</h2></div>
+        <div class="section-head"><span class="section-num">06</span><h2>Discussion: one-way function vs hash function</h2></div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Property</th><th>EC scalar multiplication</th><th>Cryptographic hash</th><th>Matters for a one-way function?</th></tr></thead>
             <tbody>
               <tr><td>Deterministic</td><td class="yes">Yes</td><td class="yes">Yes</td><td><strong>Yes.</strong> Same key, same public key, every time.</td></tr>
               <tr><td>Easy forward</td><td class="yes">Yes, O(log k) with double-and-add</td><td class="yes">Yes</td><td><strong>Yes.</strong> Required by definition.</td></tr>
-              <tr><td>Hard to invert</td><td class="yes">ECDLP, about √n work</td><td class="yes">Preimage resistance</td><td><strong>Yes, the defining property.</strong> Fails on toy curves (sec. 05).</td></tr>
+              <tr><td>Hard to invert</td><td class="yes">ECDLP, about √n work</td><td class="yes">Preimage resistance</td><td><strong>Yes, the defining property.</strong> Fails on toy curves, where trying every k is enough.</td></tr>
               <tr><td>Uniform output for a uniform input</td><td class="yes">Uniform over ⟨G⟩ (bijection)</td><td class="yes">≈ uniform over {0,1}²⁵⁶</td><td><strong>Yes, as a consequence.</strong> Q leaks nothing beyond its own value. Tested by chi-square over ⟨G⟩, not over F<sub>p</sub>.</td></tr>
               <tr><td>Injective / no collisions</td><td class="yes">Bijective on [0, n)</td><td class="no">No: compresses, so collisions exist</td><td>Not required. For hashes the requirement is that collisions are <em>hard to find</em>.</td></tr>
               <tr><td>Uniform bits, unbiased bit positions</td><td class="no">No: x &lt; p, only ~½ of x valid, y fixed by x up to sign</td><td class="yes">Yes</td><td><strong>Hash-specific.</strong> This is why ECDH secrets and public keys are hashed before being used as keys or addresses.</td></tr>
@@ -362,34 +283,48 @@ export function addDetailed(C, P, Q) {
               <span class="math">k ↦ kG</span> from Z<sub>n</sub> to ⟨G⟩. This structure is what enables ECDSA signatures, Diffie–Hellman,
               and BIP-32's public-key derivation in HW2 (child public key = parent public key + t·G).
               Its security rests only on the hardness of the ECDLP. That is not a statistical property: the outputs can pass every
-              test of section 06 and still satisfy exact algebraic relations.</p>
+              test of section 05 and still satisfy exact algebraic relations.</p>
             <p class="muted">Takeaway: statistical tests can <em>refute</em> randomness but cannot <em>prove</em> one-wayness.
               The toy curve passes some tests and is trivially invertible. secp256k1 fails the "no structure" test by design and is still believed one-way.</p>
           </div>
         </div>
       </div>
     </section>
-
-    <!-- 08 ------------------------------------------------------------ -->
-    <section class="block" id="code">
-      <div class="wrap">
-        <div class="section-head"><span class="section-num">08</span><h2>Code</h2></div>
-        <div class="grid grid-3">
-          <a class="card card-link" href="https://github.com/EdoConfo/statistics-homeworks/blob/main/hw1-toy-ecc/ecc.js"><h3 class="mono">ecc.js</h3><p class="muted small">Field and point arithmetic (BigInt), double-and-add with trace, point counting, orders, brute-force log.</p></a>
-          <a class="card card-link" href="https://github.com/EdoConfo/statistics-homeworks/blob/main/hw1-toy-ecc/viz.js"><h3 class="mono">viz.js</h3><p class="muted small">SVG animation: modular lines, third intersection, reflection, double-and-add over the bits of k.</p></a>
-          <a class="card card-link" href="https://github.com/EdoConfo/statistics-homeworks/blob/main/hw1-toy-ecc/explore.js"><h3 class="mono">explore.js</h3><p class="muted small">Experiments: coordinate frequencies, χ² tests, bit balance, correlation, avalanche, structure tests.</p></a>
-        </div>
-        <p class="mt-2">Terminal version, which prints <span class="math">G, 2G, …, kG</span> and the toy public key:</p>
-<pre><code>node hw1-toy-ecc/cli.js 6</code></pre>
-      </div>
-    </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="wrap">
-      <span>Statistics · MSc Cybersecurity · Homework 1</span>
-      <span>Educational toy code. Never use it for real keys.</span>
-    </div>
-  </footer>
+  <site-footer></site-footer>
+  <template id="assignment">
+    <h3>HMWK 1 — Example App: Public-Key Cryptography PRIVATE KEY → PUBLIC KEY in Ethereum</h3>
+    <h4>Notes</h4>
+    <p>Elliptic-curve scalar multiplication can be viewed as a cryptographic one-way function.
+      It is deterministic and easy to compute in the forward direction: private key k → public key Q = kG
+      while recovering k from Q is computationally difficult. It therefore shares some properties with cryptographic
+      hash functions, but it is based on the Elliptic Curve Discrete Logarithm Problem (ECDLP) and is used for public-key
+      cryptography and digital signatures.</p>
+    <p>The goal is to understand the basic idea of elliptic-curve scalar multiplication, not to implement a real cryptographic system.</p>
+    <h4>Task</h4>
+    <p>Write a small JavaScript/html/css program showing how a private key can be used to generate a public key using elliptic-curve
+      scalar multiplication. (In Ethereum, the relevant elliptic curve is secp256k1).</p>
+    <h4>Hints</h4>
+    <p>For this exercise, use a small toy curve: y² = x³ + 7 (mod 17)</p>
+    <p>For example, use for instance the following base point: G = (1, 5) Choose for instance a small private key: k = 6</p>
+    <p>The public key is: Q = kG  Define the toy curve and the base point G. Define the private key k.
+      Implement the basic point-addition operation. Compute and print: G, 2G, 3G, ..., kG. Or use  afaster method for a larger k.
+      Print the final point as the TOY PUBLIC KEY.</p>
+    <h4>Optional — guru level :-)</h4>
+    <p>Make a slown-down visual representation of the algo (may use the canvas or SVG, whatever you like better)</p>
+    <h4>Statistical exploration</h4>
+    <p>Repeat the experiment with different values of k and, if useful, different valid base points.
+      Explore simple statistical properties of the resulting points, for example:</p>
+    <ul>
+      <li>distribution of x and y coordinates;</li>
+      <li>frequency of individual values;</li>
+      <li>distribution of bits;</li>
+      <li>apparent uniformity;</li>
+      <li>correlations between input and output;</li>
+      <li>possible avalanche-like behaviour.</li>
+    </ul>
+    <p>Discuss which of these properties are meaningful for a cryptographic one-way function and which are properties specifically associated with cryptographic hash functions.</p>
+  </template>
 </body>
 </html>

@@ -1,7 +1,7 @@
-// HW1 page controller: curve facts, the k -> Q computation, brute-force inversion.
+// HW1 page controller: curve facts, point addition, and the k -> Q computation.
 import {
-  PRESETS, INF, enumeratePoints, groupOrder, pointOrder, multiples, scalarMultTrace,
-  bruteForceLog, add, fmt, eq,
+  PRESETS, INF, mod, inv, addDetailed, isOnCurve, enumeratePoints, groupOrder, pointOrder, multiples, scalarMultTrace,
+  fmt, eq,
 } from './ecc.js';
 import { initViz } from './viz.js';
 import { initExplore } from './explore.js';
@@ -50,8 +50,6 @@ function renderCurve() {
   $('curve-tiles').append(
     tile('#E (points incl. O)', String(N), '17 affine points + O'),
     tile('Order of G = (1, 5)', String(ordG), '9G = O'),
-    tile('Cofactor #E / ord(G)', String(N / ordG), 'secp256k1: 1'),
-    tile('p mod 3', String(C.p % 3n), 'supersingular case'),
   );
   const multipleOf = new Map();
   multiples(C, G0, Number(ordG)).forEach((P, j) => { if (P !== INF) multipleOf.set(fmt(P), j + 1); });
@@ -69,6 +67,101 @@ function renderCurve() {
       if (i === 2 && j) td.className = 'yes';
     });
   }
+}
+
+// ---- 02 point addition ---------------------------------------------------------
+
+const num = (v) => (v < 0n ? `−${-v}` : String(v));
+const factor = (v) => (v < 0n ? `(${num(v)})` : String(v));   // negative factors in brackets: (−5) · (−1)⁻¹
+const reduced = (raw) => (mod(raw, C.p) === raw ? num(raw) : `${num(raw)} ≡ ${mod(raw, C.p)}`);
+const readPoint = (v) => (v === 'O' ? INF : parsePoint(v));
+
+/** The last steps of a chain: the raw value, then its reduction mod p when it differs. */
+const result = (raw) => (mod(raw, C.p) === raw ? [['=', num(raw)]] : [['=', num(raw)], ['≡', String(mod(raw, C.p))]]);
+
+/** Writes "name = a" and then each further step on its own row, aligned under the "=". */
+function column(lines, name, steps) {
+  steps.forEach(([op, expr], i) => lines.push(`${i ? '  ' : name} ${op} ${expr}`));
+}
+
+function fillPointSelect(sel, selected) {
+  for (const P of [...POINTS, INF]) {
+    const o = document.createElement('option');
+    o.value = P === INF ? 'O' : `${P.x},${P.y}`;
+    o.textContent = P === INF ? 'O (point at infinity)' : fmt(P);
+    sel.appendChild(o);
+  }
+  sel.value = selected;
+}
+
+/** Every step of P + Q, with the raw numbers before each reduction mod p. */
+function explainAdd(P, Q) {
+  const p = C.p;
+  const d = addDetailed(C, P, Q);
+  const lines = [[[`# P = ${fmt(P)},  Q = ${fmt(Q)},  curve y² = x³ + 7 (mod ${p})`, 'c-dim']]];
+  let how;
+  if (d.kind === 'identity') {
+    how = 'O is the neutral element';
+    lines.push(P === INF ? 'P = O, the neutral element:  O + Q = Q' : 'Q = O, the neutral element:  P + O = P');
+  } else if (d.kind === 'inverse') {
+    how = 'Q = −P, vertical line';
+    lines.push(`Same x and y₁ + y₂ = ${P.y} + ${Q.y} = ${P.y + Q.y} ≡ 0, so Q = −P.`);
+    lines.push('The line through them is vertical and meets the curve "at infinity":  P + Q = O');
+  } else {
+    const { x: x1, y: y1 } = P, { x: x2, y: y2 } = Q;
+    let numRaw, denRaw;
+    const lam = [];   // λ, one step per row: [operator, expression]
+    if (d.kind === 'double') {
+      how = 'P = Q, tangent line';
+      numRaw = 3n * x1 * x1 + C.a; denRaw = 2n * y1;
+      lines.push([['P = Q: doubling, use the tangent line', 'c-hi']], '');
+      lam.push(['=', '(3·x₁² + a) · (2·y₁)⁻¹'], ['=', `(3·${x1}² + ${C.a}) · (2·${y1})⁻¹`]);
+    } else {
+      how = 'P ≠ Q, line through P and Q';
+      numRaw = y2 - y1; denRaw = x2 - x1;
+      lines.push([['P ≠ Q: line through P and Q', 'c-hi']], '');
+      lam.push(['=', '(y₂ − y₁) · (x₂ − x₁)⁻¹'], ['=', `(${y2} − ${y1}) · (${x2} − ${x1})⁻¹`]);
+    }
+    lam.push(['=', `${factor(numRaw)} · ${factor(denRaw)}⁻¹`]);
+    if (mod(numRaw, p) !== numRaw || mod(denRaw, p) !== denRaw) lam.push(['≡', `${d.num} · ${d.den}⁻¹`]);
+    const di = inv(d.den, p);
+    lam.push(['=', `${d.num} · ${di}`]);
+    lam.push(...result(d.num * di));
+    column(lines, 'λ ', lam);
+    lines.push([[`   (${d.den}⁻¹ = ${di}, because ${d.den} · ${di} = ${d.den * di} = ${(d.den * di) / p}·${p} + 1)`, 'c-dim']], '');
+
+    const { x: x3, y: y3 } = d.result;
+    column(lines, 'x₃', [['=', 'λ² − x₁ − x₂'], ['=', `${d.lambda}² − ${x1} − ${x2}`], ...result(d.lambda * d.lambda - x1 - x2)]);
+    lines.push('');
+    column(lines, 'y₃', [['=', 'λ·(x₁ − x₃) − y₁'], ['=', `${d.lambda}·(${x1} − ${x3}) − ${y1}`], ...result(d.lambda * (x1 - x3) - y1)]);
+    lines.push('');
+
+    const lhs = y3 * y3, rhs = x3 * x3 * x3 + C.a * x3 + C.b;
+    lines.push([[`check:  y₃²     = ${y3}² = ${reduced(lhs)}`, 'c-dim']]);
+    lines.push([[`        x₃³ + 7 = ${x3}³ + 7 = ${reduced(rhs)}   `, 'c-dim'],
+      isOnCurve(C, d.result) ? ['✓ on the curve', 'c-ok'] : ['✗', 'c-warn']]);
+  }
+  lines.push('', [['P + Q = ', 'c-dim'], [fmt(d.result), 'c-ok']]);
+  return { lines, result: d.result, how };
+}
+
+function initAddition() {
+  const selP = $('a-p'), selQ = $('a-q');
+  fillPointSelect(selP, '1,5');
+  fillPointSelect(selQ, '1,5');
+  const run = () => {
+    const { lines, result, how } = explainAdd(readPoint(selP.value), readPoint(selQ.value));
+    writeConsole($('a-out'), lines);
+    $('a-key-value').textContent = fmt(result);
+    $('a-key-sub').textContent = how;
+  };
+  document.querySelectorAll('[data-pq]').forEach((b) => b.addEventListener('click', () => {
+    [selP.value, selQ.value] = b.dataset.pq.split('|');
+    run();
+  }));
+  selP.addEventListener('change', run);
+  selQ.addEventListener('change', run);
+  run();
 }
 
 // ---- 03 computing Q = kG -------------------------------------------------------
@@ -165,42 +258,9 @@ function initCompute() {
   runCompute();
 }
 
-// ---- 05 brute force -------------------------------------------------------------
-
-function initInverse() {
-  const sel = $('i-target');
-  for (const P of POINTS) {
-    const o = document.createElement('option');
-    o.value = `${P.x},${P.y}`;
-    o.textContent = fmt(P);
-    if (P.x === 5n && P.y === 8n) o.selected = true;
-    sel.appendChild(o);
-  }
-  const run = () => {
-    const Q = parsePoint(sel.value);
-    const lines = [[['# find k such that k·G = Q,  G = (1, 5),  Q = ' + fmt(Q), 'c-dim']]];
-    let R = INF;
-    for (let k = 1; k <= 9; k++) {
-      R = add(C, R, G0);
-      const hit = eq(R, Q);
-      lines.push([`k = ${k}:  ${k}G = ${fmt(R).padEnd(9)} `, hit ? ['✓ match', 'c-ok'] : ['✗', 'c-dim']]);
-      if (hit) break;
-      if (R === INF) {
-        lines.push([['Back to O: the cycle of G is exhausted.', 'c-warn']]);
-        lines.push([[`${fmt(Q)} is not a multiple of G (not in ⟨G⟩): no private key maps to it with this G.`, 'c-warn']]);
-      }
-    }
-    const res = bruteForceLog(C, G0, Q, 9n);
-    if (res.k !== null) lines.push('', [['Recovered private key: ', 'c-dim'], [`k = ${res.k}`, 'c-ok'], ` after ${res.tries} tries.`]);
-    writeConsole($('i-out'), lines);
-  };
-  $('i-run').addEventListener('click', run);
-  sel.addEventListener('change', run);
-  run();
-}
 
 renderCurve();
+initAddition();
 initCompute();
 initViz({ curve: C, G: G0 });
-initInverse();
 initExplore();

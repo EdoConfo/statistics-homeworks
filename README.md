@@ -6,20 +6,20 @@ Interactive homework pages for the **Statistics** course: cryptographic primitiv
 
 | # | Homework | What's inside |
 |---|----------|---------------|
-| 1 | [Private key → public key on a toy elliptic curve](https://edoconfo.github.io/statistics-homeworks/hw1-toy-ecc/) | Point addition and double-and-add on `y² = x³ + 7 (mod 17)`, `G = (1, 5)`, `k = 6 → Q = (5, 8)`. Step-by-step SVG animation, brute-force ECDLP, and statistical exploration: coordinate distributions with χ² tests, bit balance, input/output correlation, avalanche vs SHA-256, structure tests. Discussion of one-way function vs hash properties. |
-| 2 | [From seed phrase to Ethereum address](https://edoconfo.github.io/statistics-homeworks/hw2-wallet-pipeline/) | BIP-39 → BIP-32/BIP-44 → secp256k1 → Keccak-256 → EIP-55, each step classified (generation, derivation, public-key crypto, hashing, checksum, encoding) and run live. Monte Carlo experiments on BIP-39 and EIP-55 checksums, Keccak avalanche, address uniformity. Timeline 1977–2016, SHA-2 vs Keccak/SHA-3, why the pipeline uses several primitives. |
+| 1 | [Example App: Public-Key Cryptography PRIVATE KEY → PUBLIC KEY in Ethereum](https://edoconfo.github.io/statistics-homeworks/homework-1/) | Point addition and double-and-add on `y² = x³ + 7 (mod 17)`, `G = (1, 5)`, `k = 6 → Q = (5, 8)`. Step-by-step SVG animation, brute-force ECDLP, and statistical exploration: coordinate distributions with χ² tests, bit balance, input/output correlation, avalanche vs SHA-256, structure tests. Discussion of one-way function vs hash properties. |
+| 2 | [From Wallet Seed to Ethereum Address: Hashing, Key Derivation and Cryptographic Primitives](https://edoconfo.github.io/statistics-homeworks/homework-2/) | BIP-39 → BIP-32/BIP-44 → secp256k1 → Keccak-256 → EIP-55, each step classified (generation, derivation, public-key crypto, hashing, checksum, encoding) and run live. Monte Carlo experiments on BIP-39 and EIP-55 checksums, Keccak avalanche, address uniformity. Timeline 1977–2016, SHA-2 vs Keccak/SHA-3, why the pipeline uses several primitives. |
 
 ## Structure
 
 ```
 index.html                  landing page
 assets/                     shared CSS, theme toggle, SVG charts, statistics toolkit
-hw1-toy-ecc/
+homework-1/
   ecc.js                    toy curve arithmetic (BigInt), double-and-add with trace
   viz.js                    slow-motion SVG animation
   explore.js                statistical experiments
   cli.js                    terminal version: prints G, 2G, ..., kG
-hw2-wallet-pipeline/
+homework-2/
   wallet.js                 BIP-39 / BIP-32 / BIP-44 / EIP-55 written out on top of noble primitives
   app.js, experiments.js    live demo and Monte Carlo experiments
 tests/                      node:test suites with known-answer vectors
