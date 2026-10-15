@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Homework 2 · Statistics Homeworks</title>
+  <title>Homework 1 · Part 2 · Statistics Homeworks</title>
   <meta name="description" content="The Ethereum wallet pipeline from mnemonic to checksummed address: BIP-39, BIP-32, BIP-44, secp256k1, Keccak-256 and EIP-55, with a live demo and statistical experiments.">
-  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="hw2.css">
-  <script src="../assets/js/theme.js"></script>
-  <script src="../assets/js/layout.js"></script>
+  <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <link rel="stylesheet" href="part2.css">
+  <script src="../../assets/js/theme.js"></script>
+  <script src="../../assets/js/layout.js"></script>
   <script type="importmap">
   {
     "imports": {
@@ -26,11 +26,11 @@
   <script type="module" src="app.js"></script>
 </head>
 <body>
-  <site-header homework="2"></site-header>
+  <site-header homework="1" part="2"></site-header>
 
   <main>
     <div class="wrap hero">
-      <div class="kicker">Homework 2</div>
+      <div class="kicker">Homework 1 · Part 2</div>
       <h1>From Wallet Seed to Ethereum Address: Hashing, Key Derivation and Cryptographic Primitives</h1>
       <p class="lede">Twelve words become a 0x… address through six standards.
         This page takes the pipeline apart. For each step it shows what kind of operation it is (generation, derivation,
@@ -199,7 +199,7 @@
 
           <li class="step" id="step-pub" style="--c:var(--cat-pk)">
             <div class="step-head"><h3>6 · Public key (secp256k1)</h3><span class="chip"><span class="dot"></span>public-key crypto</span></div>
-            <p class="muted small">Q = kG on y² = x³ + 7 over F<sub>p</sub>, p = 2²⁵⁶ − 2³² − 977. This is the same computation as HW1 on a curve of size ≈ 2²⁵⁶.
+            <p class="muted small">Q = kG on y² = x³ + 7 over F<sub>p</sub>, p = 2²⁵⁶ − 2³² − 977. This is the same computation as Part 1 on a curve of size ≈ 2²⁵⁶.
               The uncompressed encoding is <code>04 ‖ X ‖ Y</code>. Since Y is fixed by X up to sign, the compressed form keeps only X and the parity of Y.</p>
             <div class="kv"><span>04 ‖ X ‖ Y</span><code class="break" id="d-pub"></code></div>
             <div class="kv"><span>compressed</span><code class="break" id="d-pubc"></code></div>
@@ -259,7 +259,7 @@
               <tr><td>Mnemonic</td><td>2048<sup>12</sup> = 2<sup>132</sup> word sequences, 2<sup>128</sup> valid</td><td>A random 12-word sequence has a valid checksum with probability 2<sup>−4</sup> = 1/16 (24 words: 2<sup>−8</sup>). The first 11 words are free. Given them, only 128 of the 2048 possible last words are valid.</td></tr>
               <tr><td>Seed</td><td>Pseudo-random 512 bits</td><td>PBKDF2 adds ~11 bits of work (2<sup>11</sup> rounds) but no entropy. A wrong passphrase is <em>undetectable</em>: it gives a different, equally random-looking wallet.</td></tr>
               <tr><td>BIP-32 child keys</td><td>≈ uniform on [1, n−1]</td><td>I<sub>L</sub> ≥ n happens with probability ≈ 3.7 × 10<sup>−39</sup>. Siblings look independent, but for normal (non-hardened) children k<sub>child</sub> − k<sub>parent</sub> = I<sub>L</sub> is computable from the xpub. Leaking one child private key plus the xpub reveals the parent key, which is why the account levels are hardened.</td></tr>
-              <tr><td>Public key</td><td>Uniform over the 2<sup>256</sup>-point group, <em>not</em> over 512-bit strings</td><td>X takes only about half the values below p, and Y is determined by X up to sign. 64 bytes carry about 256 bits of entropy. As in HW1, the structure is there by design.</td></tr>
+              <tr><td>Public key</td><td>Uniform over the 2<sup>256</sup>-point group, <em>not</em> over 512-bit strings</td><td>X takes only about half the values below p, and Y is determined by X up to sign. 64 bytes carry about 256 bits of entropy. As in Part 1, the structure is there by design.</td></tr>
               <tr><td>Keccak-256 / address</td><td>≈ uniform on {0,1}<sup>160</sup></td><td>Avalanche: one flipped input bit changes ≈ 128 ± 8 of the 256 output bits. 160-bit addresses give ~2<sup>80</sup> collision resistance (birthday bound) and 2<sup>160</sup> for a second preimage.</td></tr>
               <tr><td>EIP-55</td><td>Letter count L ~ Binomial(40, 6/16), mean 15</td><td>Each letter carries one check bit, so a random error passes with probability E[2<sup>−L</sup>] = (10/16 + 6/16 · ½)<sup>40</sup> = (13/16)<sup>40</sup> ≈ 0.0247%, the figure quoted in EIP-55. All-lowercase and all-uppercase input carry no check at all. By the same formula, about 2 · 0.0247% ≈ 0.05% of addresses have a correct EIP-55 form that <em>is</em> single-case, so validators cannot tell them from unchecked input.</td></tr>
             </tbody>
@@ -380,14 +380,14 @@
             <tbody>
               <tr><td>Key management (BIP-39/32/44)</td><td>Human backup, error detection, unlimited keys from one secret, cross-wallet interoperability, watch-only xpubs</td><td>Wordlist encoding + SHA-256 checksum, PBKDF2 and HMAC-SHA512 derivation, a path convention</td><td>A hash alone cannot do public derivation (xpub). That needs the homomorphism of the curve: child pub = parent pub + I<sub>L</sub>·G.</td></tr>
               <tr><td>Ownership (secp256k1)</td><td>Anyone verifies, only the owner signs</td><td>ECDSA over secp256k1</td><td>A hash has no key pair. RSA would need ~3072-bit keys for comparable security, against 256-bit keys on the curve.</td></tr>
-              <tr><td>Identifier (Keccak-256)</td><td>Short, uniform, collision-resistant name for a public key</td><td>Keccak-256, truncated to 160 bits</td><td>The public key is 64 bytes and structured (HW1: not bit-uniform). Hashing compresses it and removes the structure.</td></tr>
+              <tr><td>Identifier (Keccak-256)</td><td>Short, uniform, collision-resistant name for a public key</td><td>Keccak-256, truncated to 160 bits</td><td>The public key is 64 bytes and structured (Part 1: not bit-uniform). Hashing compresses it and removes the structure.</td></tr>
               <tr><td>Typing safety (EIP-55)</td><td>Catch typos without changing the address format</td><td>Case-based checksum</td><td>A cryptographic MAC would need a key. A new format would break existing software. Case is free redundancy that old parsers ignore.</td></tr>
             </tbody>
           </table>
         </div>
         <div class="callout insight mt-2">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
-          <p><strong>The deep reason, linking HW1 and HW2:</strong> the properties conflict. Public-key cryptography and xpub derivation <em>need</em> algebraic
+          <p><strong>The deep reason, linking Part 1 and Part 2:</strong> the properties conflict. Public-key cryptography and xpub derivation <em>need</em> algebraic
             structure (a homomorphism). Addresses and checksums <em>need</em> the absence of structure (random-function behaviour). No single primitive can
             be both, so the pipeline alternates between them: structured where structure is useful, hashed where it would leak or bias.</p>
         </div>
@@ -429,7 +429,7 @@
 
   <site-footer></site-footer>
   <template id="assignment">
-    <h3>HMWK 2 — From Wallet Seed to Ethereum Address: Hashing, Key Derivation and Cryptographic Primitives</h3>
+    <h3>HMWK 1 · Part 2 — From Wallet Seed to Ethereum Address: Hashing, Key Derivation and Cryptographic Primitives</h3>
     <p>Statistical properties</p>
     <h4>Task</h4>
     <p>Check the practical cryptographic pipeline used in Ethereum wallets, from a mnemonic phrase to an Ethereum address and

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   selfTest, pipeline, toChecksumAddress, checkAddress, checkMnemonic, checkIndices, entropyToMnemonic,
   derivePath, hexToBytes, bytesToHex, TEST_MNEMONIC,
-} from '../homework-2/wallet.js';
+} from '../homework-1/part-2/wallet.js';
 
 test('all known-answer vectors pass', () => {
   for (const r of selfTest()) assert.equal(r.got, r.expect, r.name);

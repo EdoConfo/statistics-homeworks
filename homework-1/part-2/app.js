@@ -1,4 +1,4 @@
-// HW2 page controller: live pipeline demo, hash comparison, self-test.
+// Part 2 page controller: live pipeline demo, hash comparison, self-test.
 import {
   entropyToMnemonic, indicesToEntropy, checkIndices, mnemonicToSeed, derivePath, addressFromPrivateKey,
   toChecksumAddress, publicKey, selfTest, bytesToHex, utf8ToBytes, keccak_256, sha3_256, sha256, wordlist,

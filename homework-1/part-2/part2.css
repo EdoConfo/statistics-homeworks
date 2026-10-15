@@ -1,4 +1,4 @@
-/* HW2-specific components: pipeline flow, demo steps, word chips, EIP-55 grid, timeline. */
+/* Part 2-specific components: pipeline flow, demo steps, word chips, EIP-55 grid, timeline. */
 
 :root {
   --cat-gen: var(--series-1);

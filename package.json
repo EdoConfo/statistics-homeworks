@@ -7,7 +7,7 @@
   "scripts": {
     "test": "node --test \"tests/**/*.test.js\"",
     "serve": "python3 -m http.server 8000",
-    "hw1": "node homework-1/cli.js"
+    "hw1": "node homework-1/part-1/cli.js"
   },
   "devDependencies": {
     "@noble/curves": "1.9.7",

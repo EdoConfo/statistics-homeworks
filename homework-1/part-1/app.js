@@ -1,4 +1,4 @@
-// HW1 page controller: curve facts, point addition, and the k -> Q computation.
+// Part 1 page controller: curve facts, point addition, and the k -> Q computation.
 import {
   PRESETS, INF, mod, inv, addDetailed, isOnCurve, enumeratePoints, groupOrder, pointOrder, multiples, scalarMultTrace,
   fmt, eq,

@@ -1,4 +1,4 @@
-/* HW1-specific layout: visualisation stage and control panel. */
+/* Part 1-specific layout: visualisation stage and control panel. */
 
 .viz-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
 @media (max-width: 900px) { .viz-layout { grid-template-columns: minmax(0, 1fr); } }

@@ -1,9 +1,9 @@
-// HW2 section 06: Monte Carlo experiments on checksums, avalanche and address uniformity.
+// Part 2 section 06: Monte Carlo experiments on checksums, avalanche and address uniformity.
 import {
   entropyToMnemonic, checkIndices, toChecksumAddress, checkAddress, addressFromPrivateKey, keccak_256, bytesToHex, CURVE_N,
 } from './wallet.js';
-import { barChart } from '../assets/js/charts.js';
-import { wilson, binomialPmf, chiSquareTest, hammingBytes, mean, sd, fmtP } from '../assets/js/statkit.js';
+import { barChart } from '../../assets/js/charts.js';
+import { wilson, binomialPmf, chiSquareTest, hammingBytes, mean, sd, fmtP } from '../../assets/js/statkit.js';
 
 const $ = (id) => document.getElementById(id);
 const HEX = '0123456789abcdef';

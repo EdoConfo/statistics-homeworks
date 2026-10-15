@@ -1,4 +1,4 @@
-// Small statistics toolkit shared by both homeworks (no dependencies).
+// Small statistics toolkit shared by both parts (no dependencies).
 
 export const sum = (xs) => xs.reduce((s, x) => s + x, 0);
 export const mean = (xs) => (xs.length ? sum(xs) / xs.length : NaN);

@@ -1,9 +1,9 @@
-// HW1 section 05: statistical exploration of k -> kG.
+// Part 1 section 05: statistical exploration of k -> kG.
 import { PRESETS, INF, enumeratePoints, groupOrder, pointOrder, multiples, scalarMult, add, fmt, eq } from './ecc.js';
-import { barChart, scatterChart } from '../assets/js/charts.js';
+import { barChart, scatterChart } from '../../assets/js/charts.js';
 import {
   chiSquareTest, pearson, spearman, bitBalance, binomialPmf, randomBelow, fmtP, mean, popcount32, hammingBytes,
-} from '../assets/js/statkit.js';
+} from '../../assets/js/statkit.js';
 
 const $ = (id) => document.getElementById(id);
 const DEFAULT_COUNTS = {
