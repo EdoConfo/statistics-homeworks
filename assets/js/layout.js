@@ -3,6 +3,7 @@
 // previous and next page in PAGES. Add an entry to PAGES for every new homework-N/part-M folder.
 // Loaded as a classic script in <head> so the elements are replaced as the parser reaches them (no flash).
 // Links are resolved against this script's URL, so the same markup works from any folder depth.
+// Pages load it as layout.js?v=N: bump N in every page after changing this file, or browsers keep the old copy for up to 10 minutes.
 (function () {
   var ROOT = new URL('../../', document.currentScript.src).href;
   var REPO = 'https://github.com/EdoConfo/statistics-homeworks';
