@@ -1,0 +1,52 @@
+/* Homework 2-specific components: Caesar alphabet strip, attack progress, result tiles. */
+
+.field.grow { flex: 1 1 260px; }
+.field.grow input { width: 100%; }
+textarea { width: 100%; resize: vertical; line-height: 1.5; }
+.steps li + li { margin-top: 0.6em; }
+.steps .math-block { display: block; white-space: normal; }
+
+.split.wide-console { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+@media (max-width: 860px) { .split.wide-console { grid-template-columns: minmax(0, 1fr); } }
+
+.keyout .value-sm { font-size: clamp(1rem, 2.2vw, 1.2rem); overflow-wrap: anywhere; white-space: pre-line; }
+
+/* plain alphabet over cipher alphabet */
+.alphabet { display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); gap: 4px; }
+.alphabet .pair {
+  display: grid; text-align: center; border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+  font: 600 0.85rem/1.7 var(--mono); background: var(--surface);
+}
+.alphabet .pair span + span { background: var(--surface-2); color: var(--accent-ink); border-top: 1px solid var(--border); }
+.alphabet .pair.used { border-color: var(--accent); }
+
+.secret { display: inline-flex; align-items: center; min-height: 36px; font-weight: 650; }
+
+.swatch-inline { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--c); margin-right: 8px; vertical-align: 0; }
+
+.tile.ok .t-value { color: var(--good-ink); }
+.tile.fail .t-value { color: var(--critical-ink); }
+
+.progress-row { display: flex; align-items: center; gap: 12px; }
+.progress-row progress { flex: 1 1 auto; height: 8px; appearance: none; -webkit-appearance: none; border: 0; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.progress-row progress::-webkit-progress-bar { background: var(--surface-2); border-radius: 4px; }
+.progress-row progress::-webkit-progress-value { background: var(--accent); border-radius: 4px; }
+.progress-row progress::-moz-progress-bar { background: var(--accent); border-radius: 4px; }
+.progress-row .small { min-width: 12ch; text-align: right; font-variant-numeric: tabular-nums; }
+
+#a-cands td:last-child { font-family: var(--mono); font-size: 0.82rem; white-space: nowrap; }
+#a-cands tr.best td { background: var(--accent-wash); font-weight: 650; }
+#a-cands .table-wrap { max-height: none; }
+
+@media (max-width: 560px) {
+  .alphabet { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+}
+
+#e-tiles, #k-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 560px) { #e-tiles, #k-tiles { grid-template-columns: minmax(0, 1fr); } }
+
+/* formulas: one per row, label on the left (as in Part 1) */
+.formulas { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; align-items: baseline; text-align: left; }
+.formulas .f-label { font: 600 0.72rem/1.2 var(--mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+
+input[readonly] { background: var(--surface-2); color: var(--ink-2); }

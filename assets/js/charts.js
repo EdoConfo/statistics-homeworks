@@ -1,4 +1,4 @@
-// Minimal dependency-free SVG charts: bar/histogram and scatter.
+// Minimal dependency-free SVG charts: bar/histogram, scatter and line.
 // Each chart re-renders on container resize, carries a hover/focus tooltip
 // and an optional <details> data table so no value is hover-only.
 
@@ -70,7 +70,9 @@ function showTip(el, tip, x, y, value, label) {
   const s = document.createElement('strong');
   s.textContent = value;
   tip.appendChild(s);
-  if (label) tip.appendChild(document.createTextNode(label));
+  if (Array.isArray(label)) {   // several lines, e.g. one per series
+    for (const line of label) { const d = document.createElement('div'); d.textContent = line; tip.appendChild(d); }
+  } else if (label) tip.appendChild(document.createTextNode(label));
   tip.classList.add('show');
   const w = el.clientWidth;
   const tw = tip.offsetWidth;
@@ -145,7 +147,7 @@ function axes(svg, { M, width, height, yTicks, yScale, yFmt, xLabel, yLabel }) {
 
 /**
  * Bar chart / histogram.
- * opts: { data: [{label, value, tip?}], color, height, yMax, yFmt, xLabel, yLabel,
+ * opts: { data: [{label, value, tip?, color?}], color, height, yMax, yFmt, xLabel, yLabel,
  *         expected?: number[], expectedStyle?: 'tick'|'line', expectedLabel?, observedLabel?, ref?: {value,label},
  *         xTickEvery?, table? }
  */
@@ -191,8 +193,8 @@ function renderBars(el, o, width, tip) {
     const y = yScale(Math.min(d.value, yTop));
     const h = M.top + innerH - y;
     const shape = bw >= 8
-      ? svgEl('path', { d: topRoundedBar(x, y, bw, h, 4), fill: color, class: 'bar' }, bars)
-      : svgEl('rect', { x, y, width: bw, height: Math.max(0, h), fill: color, class: 'bar' }, bars);
+      ? svgEl('path', { d: topRoundedBar(x, y, bw, h, 4), fill: d.color ?? color, class: 'bar' }, bars)
+      : svgEl('rect', { x, y, width: bw, height: Math.max(0, h), fill: d.color ?? color, class: 'bar' }, bars);
     barEls.push(shape);
   });
 
@@ -309,6 +311,72 @@ function renderScatter(el, o, width, tip) {
       `${o.xLabel ?? 'x'} ${fmt(p.x)} · ${o.yLabel ?? 'y'} ${fmt(p.y)}`);
   });
   overlay.addEventListener('pointerleave', () => { ring.setAttribute('opacity', 0); hideTip(tip); });
+
+  el.appendChild(svg);
+}
+
+/**
+ * Line chart over evenly spaced categories, one line per series, with a shared hover readout.
+ * opts: { xLabels: string[], series: [{ label, color, values: number[] }], yMin?, yMax?, yFmt, xLabel, yLabel, height, table? }
+ */
+export function lineChart(el, opts) {
+  mount(el, opts, renderLines);
+}
+
+function renderLines(el, o, width, tip) {
+  const height = o.height ?? 260;
+  const n = o.xLabels.length;
+  const yFmt = o.yFmt ?? defaultFmt;
+  const all = o.series.flatMap((s) => s.values);
+  const y0 = o.yMin ?? Math.min(0, ...all);
+  const y1 = o.yMax ?? Math.max(...all);
+  const yT = ticks(y0, y1, 4).filter((t) => t >= y0 - 1e-9 && t <= y1 + 1e-9);
+  const M = margins(yT.map(yFmt));
+  const innerW = width - M.left - M.right;
+  const innerH = height - M.top - M.bottom;
+  const band = innerW / n;
+  const xs = (i) => M.left + band * i + band / 2;
+  const ys = (v) => M.top + innerH - ((v - y0) / (y1 - y0 || 1)) * innerH;
+
+  el.appendChild(legend(o.series.map((s) => ({ label: s.label, color: s.color, kind: 'line' }))));
+  const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img', 'aria-label': o.ariaLabel ?? 'line chart' });
+  axes(svg, { M, width, height, yTicks: yT, yScale: ys, yFmt, xLabel: o.xLabel, yLabel: o.yLabel });
+
+  const every = Math.max(1, Math.ceil(n / Math.floor(innerW / 30)));
+  const xg = svgEl('g', {}, svg);
+  o.xLabels.forEach((label, i) => {
+    if (i % every !== 0) return;
+    const t = svgEl('text', { x: xs(i), y: height - M.bottom + 15, 'text-anchor': 'middle' }, xg);
+    t.textContent = label;
+  });
+
+  const guide = svgEl('line', { y1: M.top, y2: M.top + innerH, stroke: 'var(--axis)', 'stroke-width': 1, opacity: 0 }, svg);
+  for (const s of o.series) {
+    svgEl('polyline', {
+      points: s.values.map((v, i) => `${xs(i)},${ys(v)}`).join(' '),
+      fill: 'none', stroke: s.color, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round',
+    }, svg);
+    s.values.forEach((v, i) => svgEl('circle', { cx: xs(i), cy: ys(v), r: 3, fill: s.color, stroke: 'var(--surface)', 'stroke-width': 1.5 }, svg));
+  }
+
+  const hits = svgEl('g', {}, svg);
+  o.xLabels.forEach((label, i) => {
+    const r = svgEl('rect', { class: 'hit', x: M.left + band * i, y: M.top, width: band, height: innerH }, hits);
+    if (n <= 40) { r.setAttribute('tabindex', '0'); r.setAttribute('aria-label', `${o.xLabel ?? 'x'} ${label}: ` + o.series.map((s) => `${s.label} ${yFmt(s.values[i])}`).join(', ')); }
+    const enter = () => {
+      guide.setAttribute('x1', xs(i)); guide.setAttribute('x2', xs(i)); guide.setAttribute('opacity', 1);
+      const top = Math.max(...o.series.map((s) => s.values[i]));
+      const box = svg.getBoundingClientRect();
+      const px = (xs(i) / width) * el.clientWidth;
+      const py = (ys(top) / height) * box.height + (el.querySelector('.legend')?.offsetHeight ?? 0);
+      showTip(el, tip, px, py, `${o.xLabel ? o.xLabel + ' ' : ''}${label}`, o.series.map((s) => `${s.label}: ${yFmt(s.values[i])}`));
+    };
+    const leave = () => { guide.setAttribute('opacity', 0); hideTip(tip); };
+    r.addEventListener('pointerenter', enter);
+    r.addEventListener('focus', enter);
+    r.addEventListener('pointerleave', leave);
+    r.addEventListener('blur', leave);
+  });
 
   el.appendChild(svg);
 }

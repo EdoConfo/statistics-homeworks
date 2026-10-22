@@ -7,9 +7,9 @@
   <meta name="description" content="Statistics homeworks by Edoardo Conforti, MSc Cybersecurity 2026–2027.">
   <meta name="author" content="Edoardo Conforti">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="assets/css/style.css?v=2">
-  <script src="assets/js/theme.js?v=2"></script>
-  <script src="assets/js/layout.js?v=2"></script>
+  <link rel="stylesheet" href="assets/css/style.css?v=3">
+  <script src="assets/js/theme.js?v=3"></script>
+  <script src="assets/js/layout.js?v=3"></script>
   <style>
     .hw-grid { display: grid; gap: 22px; }
     a.hw-card { --visual-w: 360px; display: grid; grid-template-columns: var(--visual-w) minmax(0, 1fr); grid-auto-rows: minmax(240px, auto); padding: 0; overflow: hidden; }
@@ -35,6 +35,12 @@
     .chain .arrow { color: var(--muted); font-size: 0.75rem; }
     .chain .pill.final { background: var(--ink); color: var(--page); border-color: var(--ink); }
     .course { color: var(--muted); font-size: 0.95rem; margin-bottom: 10px; }
+    .freq-mini { width: 218px; height: 176px; }
+    .freq-mini text { font: 10px var(--sans); fill: var(--muted); }
+    .freq-mini text.k { font: 600 10px var(--mono); fill: var(--ink-2); }
+    .freq-mini .g { stroke: var(--axis); stroke-width: 1; }
+    .freq-mini .p { fill: var(--series-1); }
+    .freq-mini .c { fill: var(--series-2); }
   </style>
 </head>
 <body>
@@ -82,6 +88,22 @@
               <span class="hw-num">Homework 1 · Part 2</span>
               <h2>From Wallet Seed to Ethereum Address: Hashing, Key Derivation and Cryptographic Primitives</h2>
               <p>The wallet pipeline step by step, from BIP-39 seed phrase to EIP-55 address, with a live demo and Monte Carlo checks.</p>
+            </div>
+          </a>
+
+          <a class="card card-link hw-card" id="homework-2" data-rail="Homework 2" href="homework-2/">
+            <div class="hw-visual" aria-hidden="true">
+              <svg class="freq-mini" viewBox="0 0 218 176">
+                <text x="6" y="10">plaintext</text><text x="6" y="94">Caesar, K = 3</text>
+                <line class="g" x1="4" y1="70.5" x2="214" y2="70.5"/><line class="g" x1="4" y1="154.5" x2="214" y2="154.5"/>
+                <rect class="p" x="6" y="35.9" width="6" height="34.1"/><rect class="p" x="14" y="64.2" width="6" height="5.8"/><rect class="p" x="22" y="60.6" width="6" height="9.4"/><rect class="p" x="30" y="53.8" width="6" height="16.2"/><rect class="p" x="38" y="18.0" width="6" height="52.0"/><rect class="p" x="46" y="60.8" width="6" height="9.2"/><rect class="p" x="54" y="61.6" width="6" height="8.4"/><rect class="p" x="62" y="45.5" width="6" height="24.5"/><rect class="p" x="70" y="46.4" width="6" height="23.6"/><rect class="p" x="78" y="69.5" width="6" height="0.5"/><rect class="p" x="86" y="65.7" width="6" height="4.3"/><rect class="p" x="94" y="52.0" width="6" height="18.0"/><rect class="p" x="102" y="60.5" width="6" height="9.5"/><rect class="p" x="110" y="42.9" width="6" height="27.1"/><rect class="p" x="118" y="40.7" width="6" height="29.3"/><rect class="p" x="126" y="63.1" width="6" height="6.9"/><rect class="p" x="134" y="69.5" width="6" height="0.5"/><rect class="p" x="142" y="46.2" width="6" height="23.8"/><rect class="p" x="150" y="42.8" width="6" height="27.2"/><rect class="p" x="158" y="32.8" width="6" height="37.2"/><rect class="p" x="166" y="60.3" width="6" height="9.7"/><rect class="p" x="174" y="65.8" width="6" height="4.2"/><rect class="p" x="182" y="60.1" width="6" height="9.9"/><rect class="p" x="190" y="69.3" width="6" height="0.7"/><rect class="p" x="198" y="61.9" width="6" height="8.1"/><rect class="p" x="206" y="69.5" width="6" height="0.5"/>
+                <rect class="c" x="6" y="153.3" width="6" height="0.7"/><rect class="c" x="14" y="145.9" width="6" height="8.1"/><rect class="c" x="22" y="153.5" width="6" height="0.5"/><rect class="c" x="30" y="119.9" width="6" height="34.1"/><rect class="c" x="38" y="148.2" width="6" height="5.8"/><rect class="c" x="46" y="144.6" width="6" height="9.4"/><rect class="c" x="54" y="137.8" width="6" height="16.2"/><rect class="c" x="62" y="102.0" width="6" height="52.0"/><rect class="c" x="70" y="144.8" width="6" height="9.2"/><rect class="c" x="78" y="145.6" width="6" height="8.4"/><rect class="c" x="86" y="129.5" width="6" height="24.5"/><rect class="c" x="94" y="130.4" width="6" height="23.6"/><rect class="c" x="102" y="153.5" width="6" height="0.5"/><rect class="c" x="110" y="149.7" width="6" height="4.3"/><rect class="c" x="118" y="136.0" width="6" height="18.0"/><rect class="c" x="126" y="144.5" width="6" height="9.5"/><rect class="c" x="134" y="126.9" width="6" height="27.1"/><rect class="c" x="142" y="124.7" width="6" height="29.3"/><rect class="c" x="150" y="147.1" width="6" height="6.9"/><rect class="c" x="158" y="153.5" width="6" height="0.5"/><rect class="c" x="166" y="130.2" width="6" height="23.8"/><rect class="c" x="174" y="126.8" width="6" height="27.2"/><rect class="c" x="182" y="116.8" width="6" height="37.2"/><rect class="c" x="190" y="144.3" width="6" height="9.7"/><rect class="c" x="198" y="149.8" width="6" height="4.2"/><rect class="c" x="206" y="144.1" width="6" height="9.9"/>
+                <text class="k" x="41" y="82" text-anchor="middle">E</text><text class="k" x="65" y="166" text-anchor="middle">H</text>
+              </svg>
+            </div>
+            <div class="hw-body">
+              <h2>Homework 2</h2>
+              <p>A message encrypted with a toy EC-ElGamal scheme on secp256k1 and with the Caesar cipher. The Caesar key is recovered from letter statistics, the toy private key by searching its small key space.</p>
             </div>
           </a>
         </div>

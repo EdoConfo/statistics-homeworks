@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homework 2 · Statistics Homeworks</title>
+  <meta name="description" content="Encrypting with a toy EC-ElGamal scheme on secp256k1 and with the Caesar cipher, statistical cryptanalysis of the Caesar cipher, and a key-space attack on the toy scheme.">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/css/style.css?v=3">
+  <link rel="stylesheet" href="hw2.css">
+  <script src="../assets/js/theme.js?v=3"></script>
+  <script src="../assets/js/layout.js?v=3"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <site-header homework="2"></site-header>
+
+  <main>
+    <div class="wrap hero">
+      <h1>Homework 2</h1>
+      <p class="lede">One message, two ciphers. The same text is encrypted with a toy elliptic-curve scheme built on the Part 1 code
+        and with the Caesar cipher. The Caesar cipher is then broken from letter statistics alone,
+        and the toy scheme is broken by searching its small key space.</p>
+    </div>
+
+    <!-- 01 ------------------------------------------------------------ -->
+    <section class="block" id="scheme">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">01</span><h2>Encrypting with the toy secp256k1 scheme</h2></div>
+        <p class="section-sub">Part 1 turned a private key <var>k</var> into a public key <span class="math">Q = kG</span>.
+          To encrypt with that key pair we use <strong>EC-ElGamal</strong>, which needs nothing beyond the point addition and
+          double-and-add of Part 1. The code of Part 1 (<code>ecc.js</code>) runs unchanged on the real secp256k1 parameters.
+          The only toy element is the private key, drawn from a small range <span class="math">[1, 2<sup>B</sup>]</span> instead of
+          <span class="math">[1, n − 1]</span> with <span class="math">n ≈ 2²⁵⁶</span>.</p>
+
+        <div class="grid grid-2">
+          <div class="prose">
+            <h3>The algorithm</h3>
+            <ol class="steps">
+              <li><strong>Key generation</strong> (receiver). Pick <var>k</var> at random in <span class="math">[1, 2<sup>B</sup>]</span> and publish
+                <span class="math">Q = kG</span>.</li>
+              <li><strong>Encoding.</strong> A curve can only add points, so the message must become a point.
+                The text is split into blocks of up to 30 bytes, each read as an integer <var>m</var>. Then
+                <span class="math">x = 256·m + j</span> for the first <span class="math">j = 0, 1, 2, …</span> that makes
+                <span class="math">x³ + 7</span> a square mod <var>p</var>, and <var>y</var> is its square root: <span class="math">M = (x, y)</span>.
+                About half of all <var>x</var> work, so <var>j</var> is usually 0, 1 or 2.</li>
+              <li><strong>Encryption</strong> (sender, knows only <var>Q</var>). Pick a fresh random <var>r</var> in <span class="math">[1, n − 1]</span>
+                and send <span class="math">C₁ = rG</span>, <span class="math">C₂ = M + rQ</span>.</li>
+              <li><strong>Decryption</strong> (receiver). Compute <span class="math">S = kC₁</span>, which equals <span class="math">rQ</span>
+                because <span class="math">k(rG) = r(kG)</span>, and recover <span class="math">M = C₂ − S</span>.
+                Dropping the last byte of <var>x</var> gives back <var>m</var> and the text.</li>
+            </ol>
+          </div>
+          <div>
+            <h3>The role of the keys</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Value</th><th>Known to</th><th>Role</th></tr></thead>
+                <tbody>
+                  <tr><td>Private key <var>k</var></td><td>Receiver only</td><td>Decrypts: turns <span class="math">C₁</span> into the mask <span class="math">S = kC₁</span>.</td></tr>
+                  <tr><td>Public key <span class="math">Q = kG</span></td><td>Everyone</td><td>Lets anyone encrypt for the receiver, with the mask <span class="math">S = rQ</span>. It cannot decrypt.</td></tr>
+                  <tr><td>Ephemeral key <var>r</var></td><td>Sender, for one block</td><td>Makes every encryption different. It travels hidden inside <span class="math">C₁ = rG</span> and is then thrown away.</td></tr>
+                  <tr><td>Shared mask <span class="math">S = rQ = kC₁</span></td><td>Sender and receiver</td><td>The point added to <var>M</var>, like a one-time key. Computing it from <var>Q</var> and <span class="math">C₁</span> alone is the Diffie–Hellman problem.</td></tr>
+                  <tr><td><var>p</var>, <var>G</var>, <var>n</var></td><td>Everyone</td><td>The curve, the base point and its prime order: fixed public parameters of secp256k1.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls mt-3">
+          <label class="field grow"><span>Message</span><input id="e-msg" type="text" value="HELLO WORLD" maxlength="120" autocomplete="off" spellcheck="false"></label>
+          <label class="field"><span>Private key range</span><select id="e-bits" data-bits></select></label>
+          <div class="btn-row">
+            <button class="btn primary" type="button" id="e-run">Encrypt and decrypt</button>
+            <button class="btn" type="button" id="e-keys">New key pair</button>
+          </div>
+        </div>
+        <div class="split wide-console">
+          <pre class="console console-wrap" id="e-out" aria-live="polite"></pre>
+          <div class="stack">
+            <div class="keyout">
+              <span class="label">Ciphertext (first block)</span>
+              <span class="value value-sm" id="e-ct"></span>
+              <span class="sub" id="e-ct-sub"></span>
+            </div>
+            <div class="keyout">
+              <span class="label">Decrypted with k</span>
+              <span class="value" id="e-pt"></span>
+              <span class="sub" id="e-pt-sub"></span>
+            </div>
+            <div class="tiles" id="e-tiles"></div>
+            <p class="small muted">Press <em>Encrypt and decrypt</em> again: the ciphertext changes every time, because <var>r</var> is new, while the
+              decrypted message stays the same.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 ------------------------------------------------------------ -->
+    <section class="block" id="caesar">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">02</span><h2>The Caesar Cipher</h2></div>
+        <p class="section-sub">Number the letters <span class="math">A = 0, B = 1, …, Z = 25</span>. The key is a shift <span class="math">K ∈ {0, …, 25}</span>,
+          and the same key encrypts and decrypts. Case is kept, and spaces and punctuation pass through unchanged.
+          The message is the same as in section 01: edit it there.</p>
+        <div class="grid grid-2">
+          <div class="stack">
+            <div class="math-block formulas">
+              <span class="f-label">encryption</span><span>c = (x + K) mod 26</span>
+              <span class="f-label">decryption</span><span>x = (c − K) mod 26</span>
+            </div>
+            <div class="controls mb-0">
+              <label class="field grow"><span>Message (the one from section 01)</span><input id="c-msg" type="text" value="HELLO WORLD" readonly tabindex="-1"></label>
+              <label class="field"><span>Key K = <output id="c-k-val">3</output></span><input id="c-k" type="range" min="0" max="25" value="3"></label>
+            </div>
+            <div class="alphabet" id="c-alpha" aria-label="Substitution table for the current key"></div>
+            <div class="keyout">
+              <span class="label">Ciphertext</span>
+              <span class="value" id="c-ct"></span>
+              <span class="sub" id="c-ct-sub"></span>
+            </div>
+          </div>
+          <pre class="console console-wrap" id="c-out" aria-live="polite"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 ------------------------------------------------------------ -->
+    <section class="block" id="compare">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">03</span><h2>Comparing the two schemes</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th></th><th>Caesar cipher</th><th>Toy EC-ElGamal on secp256k1</th></tr></thead>
+            <tbody>
+              <tr><td>Type</td><td>Symmetric: one secret <var>K</var> shared by both sides</td><td>Asymmetric: public <var>Q</var> to encrypt, private <var>k</var> to decrypt</td></tr>
+              <tr><td>Unit of encryption</td><td>One letter</td><td>One block of up to 30 bytes, encoded as a curve point</td></tr>
+              <tr><td>Encryption</td><td class="mono">c = x + K (mod 26)</td><td class="mono">C₁ = rG,  C₂ = M + rQ</td></tr>
+              <tr><td>Decryption</td><td class="mono">x = c − K (mod 26)</td><td class="mono">M = C₂ − kC₁</td></tr>
+              <tr><td>Randomness</td><td>None: deterministic. The same letter always gives the same letter.</td><td>Fresh <var>r</var> for every block: the same message gives a different ciphertext every time.</td></tr>
+              <tr><td>Key space</td><td>26 keys (25 that change the text), about 4.7 bits</td><td>Real: <span class="math">n − 1 ≈ 2²⁵⁶</span>. Toy: <span class="math">2<sup>B</sup></span>, e.g. 2²⁰ ≈ one million</td></tr>
+              <tr><td>Ciphertext size</td><td>Same as the plaintext</td><td>Two points per block: 128 bytes uncompressed (66 compressed) for up to 30 bytes of text</td></tr>
+              <tr><td>What the ciphertext shows</td><td>Letter frequencies (shifted), word lengths, spaces, punctuation, repeated words</td><td>Only the number of blocks. The coordinates look uniformly random.</td></tr>
+              <tr><td>Security rests on</td><td>Nothing: 26 keys can be tried by hand</td><td>The elliptic-curve discrete logarithm and Diffie–Hellman problems. In the toy, on the size of <span class="math">2<sup>B</sup></span> alone.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid grid-2 mt-3">
+          <div class="prose">
+            <h3>What they have in common</h3>
+            <p>Both ciphers work the same way: <em>add a secret mask in a group, subtract it to decrypt</em>.
+              Caesar adds <var>K</var> in the group of integers mod 26. EC-ElGamal adds the point <span class="math">S = rQ</span> in the group of curve points.
+              In both, decryption is just the inverse operation, and without the key the ciphertext cannot be turned back.</p>
+          </div>
+          <div class="prose">
+            <h3>Where they differ</h3>
+            <p>The difference is in the mask. Caesar uses <em>one fixed mask for every letter</em>, so the ciphertext keeps the statistics of the plaintext.
+              EC-ElGamal draws a <em>new random mask for every block</em> from a group of about 2²⁵⁶ elements, and the receiver
+              can rebuild it from <span class="math">C₁</span> only with <var>k</var>. If <var>r</var> were fixed, EC-ElGamal would become a Caesar cipher on curve points:
+              equal blocks would give equal ciphertexts.</p>
+          </div>
+        </div>
+
+        <h3 class="mt-3">Statistical properties, measured</h3>
+        <p class="muted small">The same English paragraph (<span id="m-len"></span>) encrypted with both schemes.
+          Caesar uses <span class="math">K = 3</span>. For EC-ElGamal the bars count the bytes of the ciphertext coordinates
+          <span class="math">C₁ = (x, y)</span> and <span class="math">C₂ = (x, y)</span>, 128 bytes per block.</p>
+        <div class="controls mb-0">
+          <button class="btn" type="button" id="m-run">Encrypt again</button>
+          <span class="small muted" id="m-status"></span>
+        </div>
+        <div class="tiles mt-2" id="m-tiles"></div>
+        <div class="grid grid-3">
+          <div><p class="chart-title">Plaintext letters</p><p class="chart-sub">counts of A–Z</p><div id="m-plain"></div></div>
+          <div><p class="chart-title">Caesar ciphertext letters</p><p class="chart-sub">the same bars, moved 3 places to the right</p><div id="m-caesar"></div></div>
+          <div><p class="chart-title">EC-ElGamal ciphertext bytes</p><p class="chart-sub" id="m-ec-sub"></p><div id="m-ec"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 ------------------------------------------------------------ -->
+    <section class="block" id="cryptanalysis">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">04</span><h2>Statistical Cryptanalysis of the Caesar Cipher</h2></div>
+        <p class="section-sub">A shift moves every letter by the same amount, so the <em>shape</em> of the letter distribution survives encryption.
+          With a corpus of the language we know the shape to expect. Recovering the key means finding the shift that lines the two up.</p>
+
+        <div class="grid grid-2">
+          <div>
+            <p class="chart-title">The corpus: English letter frequencies</p>
+            <p class="chart-sub" id="a-corpus-sub"></p>
+            <div id="a-corpus"></div>
+          </div>
+          <div class="prose">
+            <h3>The algorithm</h3>
+            <ol class="steps">
+              <li>From the corpus, estimate the frequency <span class="math">pᵢ</span> of each letter <var>i</var>.</li>
+              <li>Count the letters of the ciphertext, <span class="math">c_A, …, c_Z</span>, ignoring everything else. Let <var>N</var> be their total.</li>
+              <li>For each candidate key <span class="math">K = 0, …, 25</span>, undo the shift and measure how far the counts are from
+                the expected counts <span class="math">Npᵢ</span> with Pearson's statistic
+                <span class="math-block mt-1">χ²(K) = Σᵢ (c<sub>(i+K) mod 26</sub> − Npᵢ)² / (Npᵢ)</span></li>
+              <li>Keep the <var>K</var> with the smallest χ² and decrypt.</li>
+            </ol>
+            <p class="small muted">The corpus is a set of original English passages on everyday topics. A separate set of passages is held out:
+              the tests below only use text the attack has never seen.</p>
+          </div>
+        </div>
+
+        <h3 class="mt-3">Try it</h3>
+        <div class="controls">
+          <label class="field"><span>Text</span><select id="a-sample"></select></label>
+          <label class="field"><span>Secret key</span><span class="secret mono" id="a-key"></span></label>
+          <button class="btn" type="button" id="a-new-key">New random key</button>
+        </div>
+        <div class="grid grid-2">
+          <label class="field"><span>Plaintext (edit freely)</span><textarea id="a-plain" rows="6" spellcheck="false"></textarea></label>
+          <label class="field"><span>Ciphertext: all the attacker sees</span><textarea id="a-cipher" rows="6" class="mono" readonly></textarea></label>
+        </div>
+
+        <div class="tiles mt-2" id="a-results"></div>
+        <div class="grid grid-2">
+          <div><p class="chart-title">χ² for every candidate key</p><p class="chart-sub" id="a-chi-sub"></p><div id="a-chi"></div></div>
+          <div><p class="chart-title">Ciphertext letters vs English shifted by the recovered key</p><p class="chart-sub" id="a-fit-sub"></p><div id="a-fit"></div></div>
+        </div>
+        <details class="data-table mt-2" id="a-cands">
+          <summary>All 26 candidate decryptions, with the score of each method</summary>
+          <div class="table-wrap"><table>
+            <thead><tr><th class="num">K</th><th class="num">χ² (low wins)</th><th class="num">Bigram log-lik. (high wins)</th><th class="num">Letters in words (high wins)</th><th>Decryption</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- 05 ------------------------------------------------------------ -->
+    <section class="block" id="length">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">05</span><h2>Ciphertexts of different lengths</h2></div>
+        <p class="section-sub">For each length, random pieces of the held-out text are encrypted with a random key in 1–25 and attacked.
+          A success is an exactly recovered key. Four ways of scoring the 26 candidates are compared:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Method</th><th>Picks the key that…</th><th>Uses</th></tr></thead>
+            <tbody>
+              <tr><td><span class="swatch-inline" style="--c:var(--series-4)"></span>Most frequent letter is E</td><td>maps the commonest ciphertext letter to E</td><td>one number from the corpus</td></tr>
+              <tr><td><span class="swatch-inline" style="--c:var(--series-1)"></span>χ² on letter frequencies</td><td>minimises χ²(K) above</td><td>26 letter frequencies</td></tr>
+              <tr><td><span class="swatch-inline" style="--c:var(--series-3)"></span>Bigram log-likelihood (n-gram scoring)</td><td>maximises log P(x₁) + Σ log P(xₜ₊₁ | xₜ)</td><td>26 × 26 pair frequencies</td></tr>
+              <tr><td><span class="swatch-inline" style="--c:var(--series-7)"></span>Exhaustive search + word list</td><td>decrypts with all 26 keys and keeps the one with the most letters in known words</td><td>the corpus vocabulary and the spaces between words</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="controls mt-2">
+          <label class="field"><span>Trials per length</span><input id="l-trials" type="number" min="50" max="5000" step="50" value="400" style="width:110px"></label>
+          <button class="btn primary" type="button" id="l-run">Run experiment</button>
+          <span class="small muted" id="l-status"></span>
+        </div>
+        <div class="tiles" id="l-tiles"></div>
+        <p class="chart-title">Key recovered, by ciphertext length</p>
+        <p class="chart-sub" id="l-sub"></p>
+        <div id="l-chart"></div>
+
+        <div class="grid grid-2 mt-3">
+          <div class="prose">
+            <h3>Effectiveness</h3>
+            <ul>
+              <li><strong>The χ² attack needs about one sentence.</strong> Its success climbs quickly with the length and passes 95%
+                at around 20 letters. Beyond that, failures are rare accidents.</li>
+              <li><strong>Exhaustive search is free here.</strong> 26 keys are nothing to try. The hard part is <em>recognising</em> the right plaintext automatically,
+                and that is exactly what a statistical score does.</li>
+              <li><strong>More context, fewer letters.</strong> Bigram scoring uses the order of the letters as well as their counts and needs
+                about half as many letters as χ². The word list also uses the spaces between words.</li>
+            </ul>
+          </div>
+          <div class="prose">
+            <h3>Limitations</h3>
+            <ul>
+              <li><strong>Short texts.</strong> With a handful of letters the sample frequencies are mostly noise.
+                For <em>HELLO WORLD</em>, χ² prefers the key that gives <em>WTAAD LDGAS</em>: three A's, two D's and a T fit English
+                letter counts better than the real message. Bigrams and the word list get it right (try it above).</li>
+              <li><strong>Unusual texts.</strong> The method assumes the plaintext follows the corpus. Lists, codes, names, a text without E or text in another
+                language can move the minimum. The "most frequent letter" rule fails first, the word list fails on other languages, while χ² often survives.</li>
+              <li><strong>Only the Caesar cipher.</strong> One shift for the whole text is what makes the 26-way search possible. A general substitution
+                (26! keys) still yields to frequency analysis but needs a smarter search, and a polyalphabetic cipher such as Vigenère first needs the period.</li>
+              <li><strong>The language must be known</strong>, and the corpus must be large enough for its frequencies to be stable:
+                with about 35 000 letters, the frequency of E is known to within about ±0.35 percentage points.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 ------------------------------------------------------------ -->
+    <section class="block" id="keyspace">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">06</span><h2>Attacking the restricted key space</h2></div>
+        <p class="section-sub">The attacker sees the public key <var>Q</var> and the ciphertext of section 01, and knows that <span class="math">k ≤ 2<sup>B</sup></span>.
+          Finding <var>k</var> is a discrete logarithm in a small interval, and once <var>k</var> is known the message decrypts exactly as for the receiver.</p>
+        <div class="grid grid-2">
+          <div class="prose">
+            <h3>Brute force</h3>
+            <p>Walk <span class="math">G, 2G, 3G, …</span>, one point addition per step, until the point equals <var>Q</var>.
+              On average this takes <span class="math">2<sup>B−1</sup></span> additions and almost no memory.
+              Each candidate is checked exactly: a match is the key, with no statistics and no doubt.</p>
+          </div>
+          <div class="prose">
+            <h3>Baby-step giant-step</h3>
+            <p>Write <span class="math">k = i·m + j</span> with <span class="math">m = ⌈√2<sup>B</sup>⌉</span>. Store the <em>baby steps</em>
+              <span class="math">jG</span> for <span class="math">j = 1, …, m</span> in a table, then take <em>giant steps</em>
+              <span class="math">Q − i·mG</span> for <span class="math">i = 0, 1, …</span> until one lands in the table.
+              About <span class="math">2·2<sup>B/2</sup></span> additions and <span class="math">2<sup>B/2</sup></span> stored points: time traded for memory.</p>
+          </div>
+        </div>
+
+        <div class="controls mt-2">
+          <label class="field"><span>Private key range</span><select id="k-bits" data-bits></select></label>
+          <div class="field"><span class="field-label">Attack</span>
+            <div class="segmented" role="group" aria-label="Attack">
+              <button type="button" data-attack="brute" aria-pressed="true">Brute force</button>
+              <button type="button" data-attack="bsgs" aria-pressed="false">Baby-step giant-step</button>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn primary" type="button" id="k-run">Run attack</button>
+            <button class="btn" type="button" id="k-stop" disabled>Stop</button>
+          </div>
+        </div>
+        <div class="progress-row"><progress id="k-progress" max="1" value="0"></progress><span class="small muted" id="k-progress-label"></span></div>
+        <div class="split wide-console mt-2">
+          <pre class="console console-wrap" id="k-out" aria-live="polite"></pre>
+          <div class="stack">
+            <div class="keyout">
+              <span class="label">Recovered private key</span>
+              <span class="value" id="k-key">–</span>
+              <span class="sub" id="k-key-sub"></span>
+            </div>
+            <div class="tiles" id="k-tiles"></div>
+          </div>
+        </div>
+
+        <h3 class="mt-3">How the work grows with the key space</h3>
+        <p class="muted small" id="k-scale-sub"></p>
+        <div class="table-wrap">
+          <table id="k-scale">
+            <thead><tr><th>Key space</th><th class="num">Brute force: additions (average)</th><th class="num">Time here</th><th class="num">Baby-step giant-step: additions</th><th class="num">Points stored</th><th class="num">Time here</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 ------------------------------------------------------------ -->
+    <section class="block" id="discussion">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">07</span><h2>Discussion</h2></div>
+
+        <h3>Two attacks, two different weaknesses</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th></th><th>Statistical attack on Caesar</th><th>Key-space attack on the toy scheme</th></tr></thead>
+            <tbody>
+              <tr><td>What is exploited</td><td>The ciphertext leaks the letter distribution of the plaintext</td><td>The private key lives in a small, known interval</td></tr>
+              <tr><td>Input</td><td>Ciphertext only, plus a model of the language</td><td>The public key <var>Q</var> (the ciphertext is only needed at the end, to decrypt)</td></tr>
+              <tr><td>Recognising the right key</td><td>Statistical: the best score wins, and it can be wrong</td><td>Exact: <span class="math">kG = Q</span> either holds or not</td></tr>
+              <tr><td>Depends on the message</td><td>Yes: needs enough letters of a known language</td><td>No: works the same for any message, even a single byte</td></tr>
+              <tr><td>Cost</td><td>26 candidates × N letters: instant</td><td><span class="math">2<sup>B−1</sup></span> or <span class="math">2·2<sup>B/2</sup></span> group operations</td></tr>
+              <tr><td>What would stop it</td><td>Not a bigger key alone: a general substitution has 26! ≈ 2⁸⁸ keys and still falls to frequency analysis. Hiding the statistics is what matters.</td><td>A bigger key alone: with <span class="math">k</span> uniform in <span class="math">[1, n − 1]</span> the same search is hopeless</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="prose mt-3">
+          <h3>Why this fails against real ECC</h3>
+          <ul>
+            <li><strong>The key space.</strong> secp256k1 keys are uniform in <span class="math">[1, n − 1]</span> with <span class="math">n ≈ 2²⁵⁶</span>.
+              Brute force needs about 2²⁵⁵ additions. The table above extrapolates the measured speed.</li>
+            <li><strong>No shortcut is known.</strong> The best known attack on a well-chosen curve is Pollard's rho, a generic method
+              that needs about <span class="math">√(πn/4) ≈ 2¹²⁸</span> operations. At 10¹⁸ operations per second, about a billion
+              computers each doing a billion operations per second, that is still around 10¹³ years.</li>
+            <li><strong>The curve has no special weakness.</strong> The order <var>n</var> of secp256k1 is prime, so the logarithm cannot be split into small
+              pieces (Pohlig–Hellman), and none of the special-curve attacks (MOV, anomalous curves) apply.</li>
+            <li><strong>Nothing statistical to grab.</strong> With a fresh random <var>r</var> the ciphertext points look uniformly random
+              (section 03), so there is no letter-frequency side door like the one that breaks Caesar.</li>
+          </ul>
+        </div>
+
+        <h3 class="mt-3">Small key space or design?</h3>
+        <p class="muted">Other attacks, separating the weaknesses that come from the restricted key space from those that come from the way the toy scheme is built.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Attack</th><th>How it works</th><th>Weakness exploited</th><th>Against real secp256k1</th></tr></thead>
+            <tbody>
+              <tr><td>Brute force</td><td>Try <span class="math">k = 1, 2, …</span> (section 06)</td><td class="partial">Restricted key space</td><td>About 2²⁵⁵ steps: infeasible</td></tr>
+              <tr><td>Baby-step giant-step</td><td>Meet in the middle with a table (section 06)</td><td class="partial">Restricted key space</td><td>2¹²⁸ steps and 2¹²⁸ stored points: infeasible</td></tr>
+              <tr><td>Pollard's kangaroo</td><td>Two pseudo-random walks inside the interval, about <span class="math">2·2<sup>B/2</sup></span> steps and almost no memory</td><td class="partial">Restricted key space</td><td>Same √ cost as above: infeasible</td></tr>
+              <tr><td>One table for every user</td><td>Compute <span class="math">kG</span> for all <span class="math">k ≤ 2<sup>B</sup></span> once, then read off any user's key instantly</td><td class="partial">Restricted key space, shared by all users</td><td>A table of 2²⁵⁶ points cannot exist</td></tr>
+              <tr><td>Pollard's rho</td><td>Generic random walk, about <span class="math">√n</span> steps</td><td>None: works on any group</td><td>The best known attack: about 2¹²⁸ steps</td></tr>
+              <tr><td>Small or predictable <var>r</var></td><td>Solve <span class="math">C₁ = rG</span> for <var>r</var> as in section 06, then <span class="math">M = C₂ − rQ</span>. No need for <var>k</var>.</td><td class="no">Design: <var>r</var> must be full size and unpredictable</td><td>Same danger if the random generator is weak</td></tr>
+              <tr><td>Reused <var>r</var></td><td><span class="math">C₂ − C₂′ = M − M′</span>, so one known message reveals the mask and every other message encrypted with it</td><td class="no">Design: a fresh <var>r</var> for every block</td><td>Same danger in any implementation that repeats <var>r</var></td></tr>
+              <tr><td>Malleability</td><td><span class="math">(C₁, C₂ + P)</span> decrypts to <span class="math">M + P</span>: ciphertexts can be altered without detection</td><td class="no">Design: textbook ElGamal has no integrity check</td><td>Real systems use ECIES: a key derived from <span class="math">S</span> and authenticated encryption</td></tr>
+              <tr><td>Invalid points</td><td>Send a <span class="math">C₁</span> that is not on the curve and learn <span class="math">kC₁</span> in a small group</td><td class="no">Design, if points are not checked</td><td>Prevented by validating points, which this toy does</td></tr>
+              <tr><td>Length and timing</td><td>The number of blocks reveals the message length. Double-and-add takes longer for some keys than others.</td><td class="no">Design and implementation</td><td>Padding and constant-time code</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <site-footer></site-footer>
+  <template id="assignment">
+    <h3>HMWK 2</h3>
+    <p>Using the toy cryptographic scheme based on the secp256k1 elliptic curve developed in Part 1 of the previous homework, encrypt and decrypt a simple message. Describe the main steps of the algorithm and the role of the keys.</p>
+    <h4>The Caesar Cipher</h4>
+    <p>Implement the Caesar cipher to encrypt and decrypt the same message.</p>
+    <p>Discuss the similarities and differences between the two schemes, focusing on their encryption and decryption procedures, key spaces, and statistical properties.</p>
+    <h4>Statistical Cryptanalysis of the Caesar Cipher</h4>
+    <p>Given a sufficiently large corpus of text in a known language, design and implement a simple algorithm to recover the key of the Caesar cipher by exploiting the statistical distribution of letters.</p>
+    <p>Test the algorithm on ciphertexts of different lengths and discuss its effectiveness and limitations.</p>
+    <p>Optional: Compare alternative approaches, such as exhaustive key search, letter-frequency analysis, and n-gram scoring.</p>
+    <p>The toy scheme developed in Part 1 uses the secp256k1 elliptic curve but restricts the private key to a small range to make experiments computationally feasible. Design and implement a simple attack to recover the private key, or otherwise decrypt the message, exploiting this restricted key space. Discuss the differences between this attack and the statistical attack against the Caesar cipher. Explain why the same approach would not necessarily be feasible against a properly configured ECC scheme using a sufficiently large private-key space.</p>
+    <p>Optional: Discuss alternative attacks and explain which weaknesses arise from the restricted key space and which, if any, could arise from the design of the toy scheme itself.</p>
+  </template>
+</body>
+</html>
