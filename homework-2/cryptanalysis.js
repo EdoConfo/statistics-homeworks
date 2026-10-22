@@ -4,7 +4,7 @@ import {
 } from './caesar.js';
 import { TRAIN, TEST, SAMPLES } from './corpus.js';
 import { barChart, lineChart } from '../assets/js/charts.js?v=3';
-import { $, tile, yieldToBrowser, whenVisible, group } from './ui.js';
+import { $, tile, yieldToBrowser, whenVisible, group, stage } from './ui.js';
 
 const model = buildModel(TRAIN);
 const COLORS = { top: 'var(--series-4)', chi: 'var(--series-1)', bigram: 'var(--series-3)', words: 'var(--series-7)' };
@@ -47,6 +47,7 @@ function attack() {
   }));
 
   const chiKey = res.chi.key;
+  stage('chi', `K = ${chiKey} ${chiKey === K ? '✓' : '✗'}  (secret K = ${K})`);
   $('a-chi-sub').textContent = `${xs.length} ciphertext letters · log scale · lowest at K = ${chiKey}${chiKey === K ? ', the right key' : `, the right key is ${K}`}`;
   // log scale: the right key's χ² is often a hundred times smaller than the others and would vanish on a linear axis
   barChart($('a-chi'), {

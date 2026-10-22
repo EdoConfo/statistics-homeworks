@@ -1,6 +1,7 @@
 // Shared header and footer for every page: <site-header></site-header> and <site-footer></site-footer>.
-// <site-header homework="1" part="2"> also shows "Homework 1 · Part 2" in the middle of the bar, with arrows to the
-// previous and next page in PAGES. Add an entry to PAGES for every new homework-N/part-M folder.
+// <site-header homework="1"> also shows "Homework 1" in the middle of the bar, with arrows to the previous and next
+// homework in HOMEWORKS (parts of a homework are switched by the slider at the top of its pages, not here).
+// Add an entry to HOMEWORKS for every new homework-N folder.
 // Loaded as a classic script in <head> so the elements are replaced as the parser reaches them (no flash).
 // Links are resolved against this script's URL, so the same markup works from any folder depth.
 // Pages load it as layout.js?v=N: bump N in every page after changing this file, or browsers keep the old copy for up to 10 minutes.
@@ -9,27 +10,26 @@
   var REPO = 'https://github.com/EdoConfo/statistics-homeworks';
   var COURSE = 'Statistics · Cybersecurity 2026–2027';
   var AUTHOR = 'Edoardo Conforti · 2151055';
-  var PAGES = [{ hw: 1, part: 1 }, { hw: 1, part: 2 }, { hw: 2, part: 0 }];   // reading order; part 0 = homework without parts
+  var HOMEWORKS = [{ hw: 1, path: 'homework-1/part-1/' }, { hw: 2, path: 'homework-2/' }];   // reading order, each with its first page
   var GITHUB_ICON = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>';
 
   var CHEVRON_LEFT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
   var CHEVRON_RIGHT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>';
 
-  function pageName(p) { return 'Homework ' + p.hw + (p.part ? ' · Part ' + p.part : ''); }
-  function pagePath(p) { return 'homework-' + p.hw + '/' + (p.part ? 'part-' + p.part + '/' : ''); }
+  function hwName(h) { return 'Homework ' + h.hw; }
 
   function hwLink(i, icon, label) {
-    var p = PAGES[i];
-    if (!p) return '<span class="hw-arrow" aria-hidden="true"></span>';  // keeps the title centred
-    return '<a class="hw-arrow" href="' + ROOT + pagePath(p) + '" aria-label="' + label + ': ' + pageName(p) +
-      '" title="' + pageName(p) + '">' + icon + '</a>';
+    var h = HOMEWORKS[i];
+    if (!h) return '<span class="hw-arrow" aria-hidden="true"></span>';  // keeps the title centred
+    return '<a class="hw-arrow" href="' + ROOT + h.path + '" aria-label="' + label + ': ' + hwName(h) +
+      '" title="' + hwName(h) + '">' + icon + '</a>';
   }
 
-  function header(hw, part) {
-    var cur = { hw: parseInt(hw, 10), part: parseInt(part, 10) || 0 };
-    var i = PAGES.findIndex(function (p) { return p.hw === cur.hw && p.part === cur.part; });
+  function header(hw) {
+    var cur = { hw: parseInt(hw, 10) };
+    var i = HOMEWORKS.findIndex(function (h) { return h.hw === cur.hw; });
     var middle = cur.hw ? '<div class="header-title">' + hwLink(i - 1, CHEVRON_LEFT, 'Previous') +
-      '<span>' + pageName(cur) + '</span>' + hwLink(i < 0 ? -1 : i + 1, CHEVRON_RIGHT, 'Next') + '</div>' : '';
+      '<span>' + hwName(cur) + '</span>' + hwLink(i < 0 ? -1 : i + 1, CHEVRON_RIGHT, 'Next') + '</div>' : '';
     return '<header class="site-header"><div class="wrap">' +
       '<a class="brand" href="' + ROOT + '">Statistics Homeworks</a>' +
       middle +
@@ -57,7 +57,7 @@
     });
   }
 
-  define('site-header', function (el) { return header(el.getAttribute('homework'), el.getAttribute('part')); });
+  define('site-header', function (el) { return header(el.getAttribute('homework')); });
   define('site-footer', function () { return FOOTER; });
 
   // Section rail: one dash per <section id> with an <h2> in <main>, or per element marked
@@ -114,6 +114,144 @@
       links.forEach(function (a, i) {
         a.classList.toggle('active', i === active);
         if (i === active) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
+      });
+    }
+    window.addEventListener('scroll', function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  });
+
+  // Part switch: slide the thumb to the chosen part, then follow its link (new-tab clicks are left alone).
+  // Docked (page scrolled): the switch is a small tab under the header; clicking the current part opens it.
+  document.addEventListener('click', function (e) {
+    var bar = document.querySelector('.part-bar');
+    var a = e.target.closest && e.target.closest('.seg3d a[href]');
+    if (!a) {
+      if (bar && !e.target.closest('.seg3d')) setOpen(bar, false);   // a click elsewhere folds it back
+      return;
+    }
+    var seg = a.closest('.seg3d');
+    if (a.getAttribute('aria-current') === 'page') {
+      e.preventDefault();
+      if (bar && bar.classList.contains('docked')) setOpen(bar, !bar.classList.contains('open'));
+      return;
+    }
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var links = Array.prototype.slice.call(seg.querySelectorAll('a'));
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    e.preventDefault();
+    seg.setAttribute('data-active', String(links.indexOf(a) + 1));
+    links.forEach(function (l) { l.removeAttribute('aria-current'); });
+    a.setAttribute('aria-current', 'page');
+    setTimeout(function () { window.location.href = a.href; }, 320);
+  });
+
+  var openedAt = 0;   // scroll position when the docked switch was opened
+  function setOpen(bar, open) {
+    bar.classList.toggle('open', open);
+    openedAt = window.scrollY;
+    var cur = bar.querySelector('a[aria-current]');
+    if (cur && bar.classList.contains('docked')) cur.setAttribute('aria-expanded', String(open));
+  }
+
+  document.addEventListener('keydown', function (e) {
+    var bar = document.querySelector('.part-bar.open');
+    if (bar && e.key === 'Escape') setOpen(bar, false);
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var bar = document.querySelector('.part-bar');
+    if (!bar) return;
+    var cur = bar.querySelector('a[aria-current]');
+    var ticking = false;
+    function update() {
+      ticking = false;
+      var docked = window.scrollY > 12;
+      if (docked !== bar.classList.contains('docked')) {
+        bar.classList.toggle('docked', docked);
+        if (cur) { if (docked) cur.setAttribute('aria-expanded', 'false'); else cur.removeAttribute('aria-expanded'); }
+        if (!docked) setOpen(bar, false);
+      }
+      // scrolling on after opening the tab folds it again
+      if (bar.classList.contains('open') && Math.abs(window.scrollY - openedAt) > 80) setOpen(bar, false);
+    }
+    window.addEventListener('scroll', function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }, { passive: true });
+    update();
+  });
+
+  // coming back with the browser's back button restores the page from cache: put the thumb back
+  window.addEventListener('pageshow', function (e) {
+    if (!e.persisted) return;
+    document.querySelectorAll('.seg3d').forEach(function (seg) {
+      var links = Array.prototype.slice.call(seg.querySelectorAll('a'));
+      var here = links.findIndex(function (l) { return l.href === window.location.href.split('#')[0]; });
+      if (here < 0) return;
+      seg.setAttribute('data-active', String(here + 1));
+      links.forEach(function (l, i) { if (i === here) l.setAttribute('aria-current', 'page'); else l.removeAttribute('aria-current'); });
+    });
+  });
+
+  // Stage panel: values are written by the page through Stage.set(name, text) into [data-stage-value=name];
+  // while reading, the innermost [data-stage] element under the reading line lights up the panel items whose
+  // data-for shares one of its keys.
+  window.Stage = {
+    set: function (name, text) {
+      document.querySelectorAll('[data-stage-value="' + name + '"]').forEach(function (el) { el.textContent = text; });
+    },
+  };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var panels = Array.prototype.slice.call(document.querySelectorAll('.stage'));
+    if (!panels.length) return;
+    var marks = Array.prototype.slice.call(document.querySelectorAll('[data-stage]'));
+    var items = Array.prototype.slice.call(document.querySelectorAll('.stage [data-for]'));
+    var current = null, ticking = false;
+
+    function update() {
+      ticking = false;
+      var line = window.innerHeight * 0.4, best = null, bestH = Infinity;
+      marks.forEach(function (m) {
+        var r = m.getBoundingClientRect();
+        if (r.top <= line && r.bottom > line && r.height < bestH) { best = m; bestH = r.height; }
+      });
+      var key = best ? best.getAttribute('data-stage') : '';
+      if (key === current) return;
+      current = key;
+      var keys = key.split(/\s+/);
+      var lit = [];
+      items.forEach(function (it) {
+        var on = !!key && it.getAttribute('data-for').split(/\s+/).some(function (k) { return keys.indexOf(k) >= 0; });
+        it.classList.toggle('active', on);
+        if (on) lit.push(it);
+      });
+      // groups with nothing lit fold away while another group is being read
+      var refolded = false;
+      document.querySelectorAll('.stage-block').forEach(function (b) {
+        var fold = lit.length > 0 && !b.querySelector('.active');
+        if (fold !== b.classList.contains('folded')) { b.classList.toggle('folded', fold); refolded = true; }
+      });
+      if (refolded) setTimeout(function () { follow(lit); }, 480);   // measure once the folding has settled
+      else follow(lit);
+    }
+
+    // a panel taller than the window scrolls itself: the whole lit stretch if it fits, else its last item
+    function follow(lit) {
+      panels.forEach(function (p) {
+        var mine = lit.filter(function (it) { return p.contains(it); });
+        if (p.scrollHeight <= p.clientHeight) { if (p.scrollTop) p.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+        if (!mine.length) return;
+        var base = p.getBoundingClientRect().top - p.scrollTop;
+        var top = mine[0].getBoundingClientRect().top - base;
+        var last = mine[mine.length - 1].getBoundingClientRect();
+        var bottom = last.bottom - base;
+        var target = bottom - top <= p.clientHeight - 32 ? top - 16 : last.top - base - 16;
+        if (top < p.scrollTop || bottom > p.scrollTop + p.clientHeight) {
+          p.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+        }
       });
     }
     window.addEventListener('scroll', function () {

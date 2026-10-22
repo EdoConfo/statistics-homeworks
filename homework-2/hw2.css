@@ -7,6 +7,8 @@ textarea { width: 100%; resize: vertical; line-height: 1.5; }
 .steps .math-block { display: block; white-space: normal; }
 
 .split.wide-console { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+@container (min-width: 821px) and (max-width: 1000px) { .split.wide-console { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); } }
+@container (max-width: 820px) { .split.wide-console { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 860px) { .split.wide-console { grid-template-columns: minmax(0, 1fr); } }
 
 .keyout .value-sm { font-size: clamp(1rem, 2.2vw, 1.2rem); overflow-wrap: anywhere; white-space: pre-line; }

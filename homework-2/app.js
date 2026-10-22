@@ -4,7 +4,7 @@ import { encrypt as caesarEncrypt, decrypt as caesarDecrypt, letters, letterCoun
 import { TEST } from './corpus.js';
 import { barChart } from '../assets/js/charts.js?v=3';
 import { chiSquareTest, fmtP } from '../assets/js/statkit.js';
-import { $, tile, writeConsole, yieldToBrowser, whenVisible, shortHex, shortPoint, group, sup } from './ui.js';
+import { $, tile, writeConsole, yieldToBrowser, whenVisible, shortHex, shortPoint, group, sup, stage, stagePoint, stageText } from './ui.js';
 import { initCryptanalysis } from './cryptanalysis.js';
 import { initKeyspace } from './keyspace.js';
 
@@ -110,6 +110,17 @@ function runScheme() {
     tile('Decryption', `${(t2 - t1).toFixed(0)} ms`, `${blocks.length} scalar multiplication${blocks.length > 1 ? 's' : ''}, small k`),
   );
   keyspace?.setTarget({ bits, Q, blocks });
+
+  stage('k', group(k));
+  stage('k-range', `k ≤ 2${sup(bits)}`);
+  stage('Q', stagePoint(Q));
+  stage('msg', stageText(text));
+  stage('msg-bytes', `${total} bytes`);
+  stage('M', stagePoint(blocks[0].M));
+  stage('M-blocks', many ? `block 1 of ${blocks.length}` : '1 block');
+  stage('ct', `C₁ ${shortHex(blocks[0].C1.x)}\nC₂ ${shortHex(blocks[0].C2.x)}`);
+  stage('ct-size', `${blocks.length * 128} bytes`);
+  stage('dec', `${stageText(plain)} ${plain === text ? '✓' : '✗'}`);
 }
 
 function initScheme() {
@@ -167,6 +178,8 @@ function runCaesar() {
     [['  plaintext   ', 'c-dim'], quote(back), back === text ? ['   ✓', 'c-ok'] : ['   ✗', 'c-warn']],
   ]);
   $('c-ct').textContent = ct || '–';
+  stage('K', `K = ${K}`);
+  stage('caesar-ct', ct ? stageText(ct) : '–');
   $('c-ct-sub').textContent = `decrypts back to "${back}"`;
 }
 

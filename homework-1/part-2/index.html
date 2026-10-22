@@ -6,10 +6,10 @@
   <title>Homework 1 · Part 2 · Statistics Homeworks</title>
   <meta name="description" content="The Ethereum wallet pipeline from mnemonic to checksummed address: BIP-39, BIP-32, BIP-44, secp256k1, Keccak-256 and EIP-55, with a live demo and statistical experiments.">
   <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="../../assets/css/style.css?v=3">
+  <link rel="stylesheet" href="../../assets/css/style.css?v=4">
   <link rel="stylesheet" href="part2.css">
-  <script src="../../assets/js/theme.js?v=3"></script>
-  <script src="../../assets/js/layout.js?v=3"></script>
+  <script src="../../assets/js/theme.js?v=4"></script>
+  <script src="../../assets/js/layout.js?v=4"></script>
   <script type="importmap">
   {
     "imports": {
@@ -26,39 +26,50 @@
   <script type="module" src="app.js"></script>
 </head>
 <body>
-  <site-header homework="1" part="2"></site-header>
+  <site-header homework="1"></site-header>
 
   <main>
+    <div class="part-bar">
+      <nav class="seg3d" aria-label="Homework 1 parts" data-active="2">
+        <span class="seg3d-glass" aria-hidden="true"></span>
+        <span class="seg3d-thumb" aria-hidden="true"></span>
+        <a href="../part-1/">Part 1</a>
+        <a href="../part-2/" aria-current="page">Part 2</a>
+      </nav>
+    </div>
+
     <div class="wrap hero">
-      <div class="kicker">Homework 1 · Part 2</div>
-      <h1>From Wallet Seed to Ethereum Address: Hashing, Key Derivation and Cryptographic Primitives</h1>
+      <h1>From Wallet Seed to Ethereum Address</h1>
       <p class="lede">Twelve words become a 0x… address through six standards.
         This page takes the pipeline apart. For each step it shows what kind of operation it is (generation, derivation,
         public-key cryptography, hashing, checksum or encoding), runs it live in the browser, and measures its statistical behaviour.</p>
     </div>
 
+    <div class="lab wrap">
+    <div class="lab-main">
+
     <!-- 01 ------------------------------------------------------------ -->
-    <section class="block" id="pipeline">
+    <section class="block" id="pipeline" data-stage="entropy mnemonic seed hd priv pub addr eip55">
       <div class="wrap">
         <div class="section-head"><span class="section-num">01</span><h2>The pipeline at a glance</h2></div>
         <p class="section-sub">Boxes are data, arrows are operations. Every arrow is deterministic except the first. After the entropy is drawn,
           the whole wallet (every key, every address) can be recomputed from the words alone.</p>
         <ol class="flow">
-          <li class="node"><a href="#step-entropy"><span class="node-title">Entropy</span><span class="node-size">128–256 random bits</span></a></li>
-          <li class="edge"><span class="edge-label"><strong>CSPRNG</strong></span><span class="chip"><span class="dot" style="--c:var(--cat-gen)"></span>key generation</span></li>
-          <li class="node"><a href="#step-mnemonic"><span class="node-title">Mnemonic</span><span class="node-size">12–24 words</span></a></li>
-          <li class="edge"><span class="edge-label"><strong>BIP-39</strong> append SHA-256 checksum bits, split into 11-bit word indices</span><span class="chip"><span class="dot" style="--c:var(--cat-enc)"></span>encoding</span><span class="chip"><span class="dot" style="--c:var(--cat-cs)"></span>checksum</span></li>
-          <li class="node"><a href="#step-seed"><span class="node-title">Seed</span><span class="node-size">512 bits</span></a></li>
-          <li class="edge"><span class="edge-label"><strong>BIP-39</strong> PBKDF2-HMAC-SHA512, 2048 rounds, salt "mnemonic" + passphrase</span><span class="chip"><span class="dot" style="--c:var(--cat-der)"></span>key derivation</span></li>
-          <li class="node"><a href="#step-hd"><span class="node-title">Master key + chain code</span><span class="node-size">256 + 256 bits</span></a></li>
-          <li class="edge"><span class="edge-label"><strong>BIP-32</strong> child derivation along the <strong>BIP-44</strong> path m/44'/60'/0'/0/i</span><span class="chip"><span class="dot" style="--c:var(--cat-der)"></span>key derivation</span></li>
-          <li class="node"><a href="#step-priv"><span class="node-title">Private key k</span><span class="node-size">256 bits, 1 ≤ k &lt; n</span></a></li>
-          <li class="edge"><span class="edge-label"><strong>secp256k1</strong> Q = kG</span><span class="chip"><span class="dot" style="--c:var(--cat-pk)"></span>public-key crypto</span></li>
-          <li class="node"><a href="#step-pub"><span class="node-title">Public key</span><span class="node-size">64 bytes, X ‖ Y</span></a></li>
-          <li class="edge"><span class="edge-label"><strong>Keccak-256</strong>, keep the last 20 bytes</span><span class="chip"><span class="dot" style="--c:var(--cat-hash)"></span>hashing</span></li>
-          <li class="node"><a href="#step-addr"><span class="node-title">Address</span><span class="node-size">20 bytes, 40 hex digits</span></a></li>
-          <li class="edge"><span class="edge-label"><strong>EIP-55</strong> uppercase hex letters chosen by Keccak-256(address)</span><span class="chip"><span class="dot" style="--c:var(--cat-cs)"></span>checksum</span><span class="chip"><span class="dot" style="--c:var(--cat-enc)"></span>encoding</span></li>
-          <li class="node final"><a href="#step-eip55"><span class="node-title">Checksummed address</span><span class="node-size">0xf39Fd6e5…b92266</span></a></li>
+          <li class="node" data-stage="entropy"><a href="#step-entropy"><span class="node-title">Entropy</span><span class="node-size">128–256 random bits</span></a></li>
+          <li class="edge" data-stage="entropy"><span class="edge-label"><strong>CSPRNG</strong></span><span class="chip"><span class="dot" style="--c:var(--cat-gen)"></span>key generation</span></li>
+          <li class="node" data-stage="mnemonic"><a href="#step-mnemonic"><span class="node-title">Mnemonic</span><span class="node-size">12–24 words</span></a></li>
+          <li class="edge" data-stage="mnemonic"><span class="edge-label"><strong>BIP-39</strong> append SHA-256 checksum bits, split into 11-bit word indices</span><span class="chip"><span class="dot" style="--c:var(--cat-enc)"></span>encoding</span><span class="chip"><span class="dot" style="--c:var(--cat-cs)"></span>checksum</span></li>
+          <li class="node" data-stage="seed"><a href="#step-seed"><span class="node-title">Seed</span><span class="node-size">512 bits</span></a></li>
+          <li class="edge" data-stage="seed"><span class="edge-label"><strong>BIP-39</strong> PBKDF2-HMAC-SHA512, 2048 rounds, salt "mnemonic" + passphrase</span><span class="chip"><span class="dot" style="--c:var(--cat-der)"></span>key derivation</span></li>
+          <li class="node" data-stage="hd"><a href="#step-hd"><span class="node-title">Master key + chain code</span><span class="node-size">256 + 256 bits</span></a></li>
+          <li class="edge" data-stage="hd priv"><span class="edge-label"><strong>BIP-32</strong> child derivation along the <strong>BIP-44</strong> path m/44'/60'/0'/0/i</span><span class="chip"><span class="dot" style="--c:var(--cat-der)"></span>key derivation</span></li>
+          <li class="node" data-stage="priv"><a href="#step-priv"><span class="node-title">Private key k</span><span class="node-size">256 bits, 1 ≤ k &lt; n</span></a></li>
+          <li class="edge" data-stage="pub"><span class="edge-label"><strong>secp256k1</strong> Q = kG</span><span class="chip"><span class="dot" style="--c:var(--cat-pk)"></span>public-key crypto</span></li>
+          <li class="node" data-stage="pub"><a href="#step-pub"><span class="node-title">Public key</span><span class="node-size">64 bytes, X ‖ Y</span></a></li>
+          <li class="edge" data-stage="addr"><span class="edge-label"><strong>Keccak-256</strong>, keep the last 20 bytes</span><span class="chip"><span class="dot" style="--c:var(--cat-hash)"></span>hashing</span></li>
+          <li class="node" data-stage="addr"><a href="#step-addr"><span class="node-title">Address</span><span class="node-size">20 bytes, 40 hex digits</span></a></li>
+          <li class="edge" data-stage="eip55"><span class="edge-label"><strong>EIP-55</strong> uppercase hex letters chosen by Keccak-256(address)</span><span class="chip"><span class="dot" style="--c:var(--cat-cs)"></span>checksum</span><span class="chip"><span class="dot" style="--c:var(--cat-enc)"></span>encoding</span></li>
+          <li class="node final" data-stage="eip55"><a href="#step-eip55"><span class="node-title">Checksummed address</span><span class="node-size">0xf39Fd6e5…b92266</span></a></li>
         </ol>
       </div>
     </section>
@@ -68,37 +79,37 @@
       <div class="wrap">
         <div class="section-head"><span class="section-num">02</span><h2>Six kinds of operation, kept apart</h2></div>
         <div class="grid grid-3 kinds">
-          <div class="card" style="--c:var(--cat-gen)">
+          <div class="card" style="--c:var(--cat-gen)" data-stage="entropy">
             <h3><span class="dot"></span>Key generation</h3>
             <p>Creating secret material <strong>from randomness</strong>. It is the only non-deterministic step: a CSPRNG draws 128–256 bits.
               Its quality bounds everything after it, because nothing downstream can add entropy.</p>
             <p class="muted small">Pipeline: entropy for the mnemonic. Property: unpredictable and uniform.</p>
           </div>
-          <div class="card" style="--c:var(--cat-der)">
+          <div class="card" style="--c:var(--cat-der)" data-stage="seed hd priv">
             <h3><span class="dot"></span>Key derivation</h3>
             <p>Computing <strong>new keys deterministically from existing secrets</strong> with a keyed pseudo-random function (HMAC-SHA512).
               It adds no entropy. It spreads one secret into many keys that look independent.</p>
             <p class="muted small">Pipeline: PBKDF2 seed stretching, BIP-32 child keys along the BIP-44 path.</p>
           </div>
-          <div class="card" style="--c:var(--cat-pk)">
+          <div class="card" style="--c:var(--cat-pk)" data-stage="pub">
             <h3><span class="dot"></span>Public-key cryptography</h3>
             <p>A <strong>one-way relation</strong> between a private and a public key (Q = kG) that also supports
               signatures: anyone can verify, only the holder of k can sign.</p>
             <p class="muted small">Pipeline: secp256k1 public key; ECDSA signatures on every transaction.</p>
           </div>
-          <div class="card" style="--c:var(--cat-hash)">
+          <div class="card" style="--c:var(--cat-hash)" data-stage="addr">
             <h3><span class="dot"></span>Hashing</h3>
             <p>Unkeyed map from arbitrary input to a fixed-size digest that behaves like a random function.
               Preimage, second-preimage and collision resistance, plus the avalanche effect.</p>
             <p class="muted small">Pipeline: Keccak-256 for the address. SHA-256 and SHA-512 inside the BIP-39 checksum, HMAC and PBKDF2.</p>
           </div>
-          <div class="card" style="--c:var(--cat-cs)">
+          <div class="card" style="--c:var(--cat-cs)" data-stage="mnemonic eip55">
             <h3><span class="dot"></span>Checksums</h3>
             <p>Redundancy that <strong>detects accidental errors</strong> (typos, swapped words). Not a security mechanism against an adversary:
               anyone can compute a valid checksum.</p>
             <p class="muted small">Pipeline: the last 4–8 bits of a BIP-39 phrase, the letter case of an EIP-55 address.</p>
           </div>
-          <div class="card" style="--c:var(--cat-enc)">
+          <div class="card" style="--c:var(--cat-enc)" data-stage="mnemonic eip55">
             <h3><span class="dot"></span>Encoding</h3>
             <p>A <strong>reversible change of representation</strong> with no secret and no loss: bits ↔ words, bytes ↔ hex, a mixed-case display.
               It provides no confidentiality.</p>
@@ -112,7 +123,7 @@
     </section>
 
     <!-- 03 ------------------------------------------------------------ -->
-    <section class="block" id="demo">
+    <section class="block" id="demo" data-stage="entropy mnemonic seed hd priv pub addr eip55">
       <div class="wrap">
         <div class="section-head"><span class="section-num">03</span><h2>Live demo: run the pipeline</h2></div>
         <p class="section-sub"><strong>Test phrases only.</strong> The demo generates new phrases or loads public test phrases, and runs entirely in the browser.
@@ -133,14 +144,14 @@
         </div>
 
         <ol class="steps">
-          <li class="step" id="step-entropy" style="--c:var(--cat-gen)">
+          <li class="step" id="step-entropy" data-stage="entropy" style="--c:var(--cat-gen)">
             <div class="step-head"><h3>1 · Entropy</h3><span class="chip"><span class="dot"></span>key generation</span></div>
             <p class="muted small">Random bits from <code>crypto.getRandomValues</code> (a CSPRNG). For the test phrases, the bits are recovered from the words.</p>
             <div class="kv"><span>hex</span><code class="break" id="d-entropy"></code></div>
             <div class="bitstring mono" id="d-entbits"></div>
           </li>
 
-          <li class="step" id="step-mnemonic" style="--c:var(--cat-enc)">
+          <li class="step" id="step-mnemonic" data-stage="mnemonic" style="--c:var(--cat-enc)">
             <div class="step-head"><h3>2 · Mnemonic (BIP-39)</h3><span class="chip"><span class="dot" style="--c:var(--cat-enc)"></span>encoding</span><span class="chip"><span class="dot" style="--c:var(--cat-cs)"></span>checksum</span></div>
             <p class="muted small">ENT bits + CS = ENT/32 bits of SHA-256(entropy), cut into 11-bit groups. Each group indexes one of 2048 words.
               <strong>Click a word</strong> to replace it with a random one and watch the checksum fail (it survives about 1 time in 16).</p>
@@ -148,7 +159,7 @@
             <div class="cs-row"><span id="d-cs" class="badge"></span><span class="small muted" id="d-cs-detail"></span></div>
           </li>
 
-          <li class="step" id="step-seed" style="--c:var(--cat-der)">
+          <li class="step" id="step-seed" data-stage="seed" style="--c:var(--cat-der)">
             <div class="step-head"><h3>3 · Seed</h3><span class="chip"><span class="dot"></span>key derivation</span></div>
             <p class="muted small"><code>PBKDF2(HMAC-SHA512, password = mnemonic, salt = "mnemonic" + passphrase, 2048 rounds, 64 bytes)</code>.
               The rounds slow down brute force. The passphrase has <em>no checksum</em>: every passphrase opens a valid but different wallet.</p>
@@ -156,7 +167,7 @@
             <p class="small muted mb-0" id="d-seed-time"></p>
           </li>
 
-          <li class="step" id="step-hd" style="--c:var(--cat-der)">
+          <li class="step" id="step-hd" data-stage="hd" style="--c:var(--cat-der)">
             <div class="step-head"><h3>4 · HD derivation (BIP-32 along a BIP-44 path)</h3><span class="chip"><span class="dot"></span>key derivation</span></div>
             <p class="muted small">Master: <code>I = HMAC-SHA512("Bitcoin seed", seed)</code>. Each child: <code>I = HMAC-SHA512(chain code, data)</code>,
               child key = (I<sub>L</sub> + parent key) mod n. A prime ′ marks a <strong>hardened</strong> index (≥ 2³¹), whose data is the parent <em>private</em> key.
@@ -169,26 +180,26 @@
             </div>
           </li>
 
-          <li class="step" id="step-priv" style="--c:var(--cat-der)">
+          <li class="step" id="step-priv" data-stage="priv" style="--c:var(--cat-der)">
             <div class="step-head"><h3>5 · Private key</h3><span class="chip"><span class="dot"></span>key derivation (result)</span></div>
             <div class="kv"><span>k</span><code class="break" id="d-priv"></code></div>
           </li>
 
-          <li class="step" id="step-pub" style="--c:var(--cat-pk)">
+          <li class="step" id="step-pub" data-stage="pub" style="--c:var(--cat-pk)">
             <div class="step-head"><h3>6 · Public key (secp256k1)</h3><span class="chip"><span class="dot"></span>public-key crypto</span></div>
             <p class="muted small">Q = kG on y² = x³ + 7 over F<sub>p</sub>, p = 2²⁵⁶ − 2³² − 977. This is the same computation as Part 1 on a curve of size ≈ 2²⁵⁶.
               It is written as <code>04 ‖ X ‖ Y</code>.</p>
             <div class="kv"><span>04 ‖ X ‖ Y</span><code class="break" id="d-pub"></code></div>
           </li>
 
-          <li class="step" id="step-addr" style="--c:var(--cat-hash)">
+          <li class="step" id="step-addr" data-stage="addr" style="--c:var(--cat-hash)">
             <div class="step-head"><h3>7 · Keccak-256 → address</h3><span class="chip"><span class="dot"></span>hashing</span></div>
             <p class="muted small">Hash the 64 bytes X ‖ Y (without the 04 prefix) and keep the <strong>last 20 bytes</strong>, highlighted below.</p>
             <div class="kv"><span>Keccak-256</span><code class="break" id="d-hash"></code></div>
             <div class="kv"><span>address</span><code class="break" id="d-addr"></code></div>
           </li>
 
-          <li class="step" id="step-eip55" style="--c:var(--cat-cs)">
+          <li class="step" id="step-eip55" data-stage="eip55" style="--c:var(--cat-cs)">
             <div class="step-head"><h3>8 · EIP-55 checksum</h3><span class="chip"><span class="dot"></span>checksum</span><span class="chip"><span class="dot" style="--c:var(--cat-enc)"></span>encoding</span></div>
             <p class="muted small">Hash the lowercase hex <em>text</em> with Keccak-256. Each letter a–f is uppercased when the hash nibble at the same position is ≥ 8.
               Digits 0–9 carry no information.</p>
@@ -202,6 +213,28 @@
         </ol>
       </div>
     </section>
+
+    </div>
+
+    <aside class="stage" aria-label="Current values">
+      <p class="stage-title">Pipeline · current values</p>
+      <ol class="stage-chain">
+        <li class="stage-node" data-for="entropy"><span class="stage-label">Entropy</span><span class="stage-note" data-stage-value="ent-bits"></span><code class="stage-value" data-stage-value="entropy">–</code></li>
+        <li class="stage-op" data-for="mnemonic">BIP-39 · checksum, 11-bit words</li>
+        <li class="stage-node" data-for="mnemonic"><span class="stage-label">Mnemonic</span><span class="stage-note" data-stage-value="words"></span><code class="stage-value" data-stage-value="mnemonic">–</code></li>
+        <li class="stage-op" data-for="seed">PBKDF2-HMAC-SHA512 · 2048 rounds</li>
+        <li class="stage-node" data-for="seed"><span class="stage-label">Seed</span><span class="stage-note">512 bits</span><code class="stage-value" data-stage-value="seed">–</code></li>
+        <li class="stage-op" data-for="hd">BIP-32 along m/44′/60′/0′/0/0</li>
+        <li class="stage-node" data-for="hd priv"><span class="stage-label">Private key k</span><span class="stage-note">256 bits</span><code class="stage-value" data-stage-value="priv">–</code></li>
+        <li class="stage-op" data-for="pub">secp256k1 · Q = kG</li>
+        <li class="stage-node" data-for="pub"><span class="stage-label">Public key</span><span class="stage-note">04 ‖ X ‖ Y</span><code class="stage-value" data-stage-value="pub">–</code></li>
+        <li class="stage-op" data-for="addr">Keccak-256 · last 20 bytes</li>
+        <li class="stage-node" data-for="addr"><span class="stage-label">Address</span><span class="stage-note">20 bytes</span><code class="stage-value" data-stage-value="addr">–</code></li>
+        <li class="stage-op" data-for="eip55">EIP-55 · letter case</li>
+        <li class="stage-node" data-for="eip55"><span class="stage-label">Checksummed address</span><code class="stage-value" data-stage-value="final">–</code></li>
+      </ol>
+    </aside>
+    </div>
 
     <!-- 04 ------------------------------------------------------------ -->
     <section class="block" id="standards">

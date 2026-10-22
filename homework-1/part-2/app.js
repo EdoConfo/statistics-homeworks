@@ -12,6 +12,10 @@ const LEVEL_NAMES = ['master', 'purpose', 'coin type (60 = ETH)', 'account', 'ch
 
 const state = { indices: [], changed: new Set() };
 
+// side panel of current values (layout.js): first and last digits of long hex strings
+const stage = (name, text) => window.Stage?.set(name, text);
+const ends = (hex, n = 8) => (hex.length > 2 * n + 1 ? `${hex.slice(0, n)}…${hex.slice(-n)}` : hex);
+
 function badge(el, kind, text) {
   el.className = `badge ${kind}`;
   el.replaceChildren();
@@ -154,6 +158,16 @@ function render() {
     grid.appendChild(c);
   }
   $('d-final').textContent = checksummed;
+
+  stage('entropy', ends(bytesToHex(entropy)));
+  stage('ent-bits', `${entropy.length * 8} bits`);
+  stage('mnemonic', `${words.slice(0, 3).join(' ')} … ${words.at(-1)}${valid ? '' : '  ✗ checksum'}`);
+  stage('words', `${words.length} words`);
+  stage('seed', ends(bytesToHex(seed)));
+  stage('priv', ends(bytesToHex(priv)));
+  stage('pub', `04 ${ends(hex.slice(2))}`);
+  stage('addr', `0x${ends(address)}`);
+  stage('final', checksummed);
   $('d-final-sub').textContent = `${letters} letters = ${letters} check bits (${upper} uppercase). A random typo slips through with probability ≈ 2^−${letters} = ${(2 ** -letters).toExponential(1)}.`;
 }
 

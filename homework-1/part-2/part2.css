@@ -98,3 +98,4 @@ table.levels td.mono { font-size: 0.8rem; }
   background: var(--accent); box-shadow: 0 0 0 3px var(--page);
 }
 .timeline .year { font: 650 0.95rem var(--mono); text-align: right; padding-top: 2px; }
+

@@ -38,7 +38,7 @@
   --radius: 12px;
   --radius-sm: 8px;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
-  --wide: 1120px;
+  --wide: 1280px;
   --prose: 760px;
 }
 
@@ -425,6 +425,197 @@ details.data-table .table-wrap { margin-top: 6px; max-height: 260px; overflow: a
   .rail a.active { color: var(--ink); font-weight: 600; }
 }
 
+/* ---------- part switch: a raised segmented control at the top of a homework split into parts ----------
+   <div class="part-bar"><nav class="seg3d" data-active="1"><span class="seg3d-thumb"></span><a …>Part 1</a><a …>Part 2</a></nav></div>
+   Each segment is a link to its part's page; layout.js slides the thumb before following it.
+   Once the page scrolls, layout.js adds .docked: the switch shrinks to the current part only and hangs from the
+   header like a tab. Clicking the tab adds .open and the full switch unfolds, still attached to the header. */
+
+.part-bar {
+  position: sticky; top: 56px; z-index: 21; height: 52px; margin-top: 16px;
+  display: flex; justify-content: center; align-items: flex-start; pointer-events: none;
+}
+.part-bar + .hero { padding-top: clamp(16px, 4vw, 40px); }
+html:has(.part-bar) { scroll-padding-top: 104px; }
+.part-bar ~ .lab .stage { top: 100px; max-height: calc(100vh - 116px); }
+
+.seg3d {
+  --thumb-top: #ffffff; --thumb-bottom: #f4f4f1;
+  --thumb-shadow: 0 1px 1px rgba(0, 0, 0, .06), 0 3px 10px rgba(0, 0, 0, .13), 0 0 0 .5px rgba(0, 0, 0, .07), inset 0 1px 0 rgba(255, 255, 255, .95);
+  --liquid: cubic-bezier(.34, 1.36, .44, 1);   /* a little overshoot, like a drop settling */
+  --fillet: 14px;
+  --glass: color-mix(in srgb, var(--page) 85%, transparent);   /* the header's own glass */
+  position: relative; display: inline-flex; padding: 4px; margin-top: 8px; pointer-events: auto;
+  border-radius: 22px 22px 22px 22px;   /* real sizes, not 999px: an interpolated huge radius snaps square mid-way */
+  transform-origin: 50% 0;
+  /* the radius eases without overshoot: a bounce would push it below zero and square the corners for a frame */
+  transition: margin .6s var(--liquid), padding .6s var(--liquid), border-radius .5s cubic-bezier(.25, .8, .3, 1);
+}
+/* The surface lives on its own layer: an element that blurs its backdrop stops its children from blurring theirs,
+   so the switch, the glass and the two corners are siblings, each with its own blur. */
+.seg3d-glass {
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: var(--surface-2); border: 1px solid var(--border); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .12);
+  transition: background-color .35s, border-color .35s, box-shadow .45s;
+}
+.seg3d a {
+  position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  flex: 1 1 0; min-width: 120px; max-width: 200px; height: 34px; padding: 0 24px; overflow: hidden; white-space: nowrap;
+  border-radius: 999px; color: var(--ink-2); font: 600 0.92rem/1 var(--sans); text-decoration: none;
+  transition: color .3s, min-width .65s var(--liquid), max-width .65s var(--liquid), height .6s var(--liquid),
+    padding .65s var(--liquid), opacity .3s, font-size .6s var(--liquid);
+}
+.seg3d a:hover { color: var(--ink); }
+.seg3d a[aria-current="page"] { color: var(--ink); }
+.seg3d a:focus-visible { outline-offset: -2px; border-radius: 999px; }
+.seg3d-thumb {
+  position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 999px;
+  background: linear-gradient(to bottom, var(--thumb-top), var(--thumb-bottom)); box-shadow: var(--thumb-shadow);
+  transition: transform .6s var(--liquid), width .6s var(--liquid), top .6s var(--liquid), opacity .35s;
+}
+.seg3d[data-active="2"] .seg3d-thumb { transform: translateX(100%); }
+
+/* the two concave corners that let the tab flow out of the header's bottom edge: glass cut to shape
+   (clip-path also clips the blur, which a transparent gradient would not) plus a thin line along the curve */
+.seg3d::before, .seg3d::after {
+  content: ""; position: absolute; top: -1px; width: var(--fillet); height: var(--fillet); pointer-events: none;
+  backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  opacity: 0; transform: scale(0); transition: transform .5s var(--liquid) .08s, opacity .2s .08s;
+}
+.seg3d::before {
+  right: calc(100% - 1px); transform-origin: 100% 0;
+  clip-path: path("M0,0 H14 V14 A14,14 0 0,0 0,0 Z");
+  background: radial-gradient(circle at 0 100%, transparent 13.4px, var(--border) 13.6px, var(--border) 14.6px, transparent 14.8px), var(--glass);
+}
+.seg3d::after {
+  left: calc(100% - 1px); transform-origin: 0 0;
+  clip-path: path("M14,0 H0 V14 A14,14 0 0,1 14,0 Z");
+  background: radial-gradient(circle at 100% 100%, transparent 13.4px, var(--border) 13.6px, var(--border) 14.6px, transparent 14.8px), var(--glass);
+}
+
+/* docked: one drop hanging from the header, showing only the current part */
+.part-bar.docked .seg3d {
+  margin-top: -1px; padding: 0 4px 4px; border-radius: 0 0 20px 20px;
+  animation: drop-merge .8s ease-in-out;
+}
+.part-bar.docked .seg3d-glass {
+  background: var(--glass); border-top-color: transparent; box-shadow: 0 12px 22px -12px rgba(0, 0, 0, .22);
+  backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px);
+}
+.part-bar.docked .seg3d::before, .part-bar.docked .seg3d::after { opacity: 1; transform: none; }
+.part-bar.docked .seg3d-thumb { top: 1px; bottom: 4px; left: 4px; }
+.part-bar.docked .seg3d a { height: 28px; font-size: 0.82rem; }
+.part-bar.docked:not(.open) .seg3d a:not([aria-current]) { min-width: 0; max-width: 0; padding: 0; opacity: 0; }
+.part-bar.docked:not(.open) .seg3d a[aria-current] { min-width: 96px; padding: 0 16px; cursor: pointer; }
+.part-bar.docked:not(.open) .seg3d-thumb { width: calc(100% - 8px); transform: none; opacity: 0; }
+.part-bar.docked.open .seg3d { animation: drop-swell .7s ease-in-out; }
+.part-bar.docked.open .seg3d-thumb { width: calc(50% - 4px); }
+.part-bar.docked:not(.open) .seg3d a[aria-current]::after {
+  content: ""; width: 6px; height: 6px; margin-top: -3px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg); opacity: .55;
+}
+
+/* squash and stretch: the drop meets the header, flattens, then settles */
+@keyframes drop-merge {
+  0% { transform: scale(1, 1); }
+  35% { transform: scale(1.08, 0.86); }
+  60% { transform: scale(0.97, 1.06); }
+  80% { transform: scale(1.015, 0.985); }
+  100% { transform: none; }
+}
+@keyframes drop-swell {
+  0% { transform: scale(1, 1); }
+  40% { transform: scale(1.03, 0.94); }
+  70% { transform: scale(0.99, 1.03); }
+  100% { transform: none; }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .seg3d { --thumb-top: #43433f; --thumb-bottom: #353532; --thumb-shadow: 0 1px 1px rgba(0, 0, 0, .4), 0 3px 10px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .1); }
+}
+:root[data-theme="dark"] .seg3d { --thumb-top: #43433f; --thumb-bottom: #353532; --thumb-shadow: 0 1px 1px rgba(0, 0, 0, .4), 0 3px 10px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .1); }
+
+/* ---------- stage: a panel of current values that follows the reading (layout.js highlights it) ----------
+   <div class="lab wrap"><div class="lab-main"> sections … </div><aside class="stage"> … </aside></div>
+   Content marks the step it explains with data-stage="key …"; panel items list theirs in data-for="key …". */
+
+.lab-main { min-width: 0; container-type: inline-size; }
+.lab-main .wrap { width: 100%; margin-inline: 0; }
+.stage { display: none; }
+
+@media (min-width: 960px) {
+  .lab { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 0 24px; align-items: start; }
+  .stage {
+    display: block; position: sticky; top: 72px; margin: clamp(32px, 6vw, 56px) 0;
+    max-height: calc(100vh - 88px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 14px 14px 16px;
+  }
+}
+@media (min-width: 1280px) {
+  .lab { grid-template-columns: minmax(0, 1fr) 290px; gap: 0 28px; }
+}
+/* the main column is narrower next to the panel: let side-by-side layouts stack when it gets tight */
+@container (max-width: 820px) {
+  .lab-main .grid-2, .lab-main .split { grid-template-columns: minmax(0, 1fr); }
+  .lab-main .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container (max-width: 540px) {
+  .lab-main .grid-3 { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* the panel scrolls itself to the lit step (layout.js); its own scrollbar would only be clutter */
+.stage { scrollbar-width: none; }
+.stage::-webkit-scrollbar { display: none; }
+
+/* a panel with several groups keeps open only the groups of the section being read (layout.js adds .folded) */
+.stage-fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .45s cubic-bezier(.3, .9, .3, 1), opacity .3s; }
+.stage-fold > div { min-height: 0; overflow: hidden; padding: 3px; margin: -3px; }   /* room for the lit item's glow */
+.stage-block.folded .stage-fold { grid-template-rows: 0fr; opacity: 0; }
+.stage-block .stage-group { display: flex; align-items: center; gap: 6px; transition: color .3s, margin .45s; }
+.stage-block .stage-group::after {
+  content: ""; width: 5px; height: 5px; margin-top: -2px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg); transition: transform .3s; opacity: .7;
+}
+.stage-block.folded .stage-group { margin-bottom: 0; }
+.stage-block.folded .stage-group::after { transform: rotate(-45deg); margin-top: 0; }
+
+.stage-title { font: 600 0.7rem/1.3 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); margin: 0 2px 12px; }
+.stage-group { font: 600 0.66rem/1.3 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 16px 2px 8px; }
+.stage-chain { list-style: none; margin: 0; padding: 0; }
+.stage-chain li + li { margin-top: 0; }
+.stage-node {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1px 8px; align-items: baseline;
+  padding: 6px 10px 7px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface);
+  transition: border-color .25s, background-color .25s, box-shadow .25s;
+}
+.stage-label { font-size: 0.8rem; font-weight: 600; color: var(--ink); }
+.stage-note { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+.stage-node .stage-value {
+  grid-column: 1 / -1; font: 0.74rem/1.45 var(--mono); color: var(--ink-2);
+  background: none; border: 0; padding: 0; overflow-wrap: anywhere; white-space: pre-line;
+}
+.stage-op {
+  position: relative; padding: 4px 0 4px 24px; margin-left: 12px; border-left: 1.5px solid var(--axis);
+  font: 0.7rem/1.35 var(--mono); color: var(--muted); transition: color .25s, border-color .25s;
+}
+.stage-op::after {
+  content: ""; position: absolute; left: -5px; bottom: -1px;
+  border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--axis);
+  transition: border-top-color .25s;
+}
+.stage-node.active { border-color: var(--accent); background: var(--accent-wash); box-shadow: 0 0 0 3px var(--accent-wash); }
+.stage-node.active .stage-value { color: var(--ink); }
+.stage-op.active { color: var(--accent-ink); border-left-color: var(--accent); }
+.stage-op.active::after { border-top-color: var(--accent); }
+.stage-plot { margin: 0 0 12px; }
+.stage-plot svg { display: block; width: 100%; height: auto; }
+
+/* mid-size windows: narrower side gutters (the rail and the assignment tab need about 60px each) */
+@media (min-width: 720px) and (max-width: 1279px) {
+  .wrap { width: min(var(--wide), 100% - 128px); }
+}
+
 /* ---------- assignment drawer (built by layout.js from <template id="assignment">) ---------- */
 
 .drawer-tab {
@@ -475,3 +666,4 @@ details.data-table .table-wrap { margin-top: 6px; max-height: 260px; overflow: a
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+.stage-node.gap { margin-top: 8px; }

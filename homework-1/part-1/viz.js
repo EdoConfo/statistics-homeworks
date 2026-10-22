@@ -14,6 +14,40 @@ const PAD = { left: 34, right: 14, top: 26, bottom: 30 };
 const NAIVE_MAX = 60;
 const PHASES = 4;
 
+/**
+ * The line y = λx + c through P over F_p, laid on the p × p grid (lattice point v drawn at v + 0.5):
+ * the pieces of the real line between the points where it wraps, and the p points of the line in F_p × F_p.
+ */
+export function wrappedLine(lambda, P, p) {
+  let s = Number(lambda);
+  if (s > p / 2) s -= p;                       // shortest representative: fewer wraps
+  const c0 = Number(P.y) - s * Number(P.x);
+  const f = (x) => s * x + c0 + 0.5;           // shifted so lattice v -> v + 0.5
+  const xa = -0.5, xb = p - 0.5;
+  const cuts = [xa];
+  if (s !== 0) {
+    const lo = Math.min(f(xa), f(xb)), hi = Math.max(f(xa), f(xb));
+    for (let m = Math.ceil(lo / p); m * p <= hi; m++) {
+      const xc = (m * p - c0 - 0.5) / s;
+      if (xc > xa && xc < xb) cuts.push(xc);
+    }
+  }
+  cuts.push(xb);
+  cuts.sort((a, b) => a - b);
+  const segments = [];
+  for (let i = 0; i < cuts.length - 1; i++) {
+    const a = cuts[i], b = cuts[i + 1];
+    const shift = Math.floor(f((a + b) / 2) / p) * p;
+    segments.push([a + 0.5, f(a) - shift, b + 0.5, f(b) - shift]);
+  }
+  const dots = [];
+  for (let x = 0; x < p; x++) {
+    const y = (((Number(lambda) * x + (Number(P.y) - Number(lambda) * Number(P.x))) % p) + p) % p;
+    dots.push([x + 0.5, y + 0.5]);
+  }
+  return { segments, dots };
+}
+
 function el(tag, attrs, parent) {
   const e = document.createElementNS(NS, tag);
   for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
@@ -170,32 +204,11 @@ export function initViz({ curve: C, G: G0 }) {
 
   /** Line y = s*x + c0 over the reals, wrapped mod p onto the grid. */
   function drawWrappedLine(lambda, P) {
-    let s = Number(lambda);
-    if (s > p / 2) s -= p;                       // shortest representative: fewer wraps
-    const c0 = Number(P.y) - s * Number(P.x);
-    const f = (x) => s * x + c0 + 0.5;           // shifted so lattice v -> v + 0.5
-    const xa = -0.5, xb = p - 0.5;
-    const cuts = [xa];
-    if (s !== 0) {
-      const lo = Math.min(f(xa), f(xb)), hi = Math.max(f(xa), f(xb));
-      for (let m = Math.ceil(lo / p); m * p <= hi; m++) {
-        const xc = (m * p - c0 - 0.5) / s;
-        if (xc > xa && xc < xb) cuts.push(xc);
-      }
-    }
-    cuts.push(xb);
-    cuts.sort((a, b) => a - b);
+    const { segments, dots } = wrappedLine(lambda, P, p);
     const g = el('g', { class: 'fade-in' }, lineLayer);
-    for (let i = 0; i < cuts.length - 1; i++) {
-      const a = cuts[i], b = cuts[i + 1];
-      const shift = Math.floor(f((a + b) / 2) / p) * p;
-      el('line', { class: 'line-seg', x1: X(a + 0.5), y1: Y(f(a) - shift), x2: X(b + 0.5), y2: Y(f(b) - shift) }, g);
-    }
+    for (const [x1, y1, x2, y2] of segments) el('line', { class: 'line-seg', x1: X(x1), y1: Y(y1), x2: X(x2), y2: Y(y2) }, g);
     // the line as a set of points of F_p x F_p
-    for (let x = 0; x < p; x++) {
-      const y = (((Number(lambda) * x + (Number(P.y) - Number(lambda) * Number(P.x))) % p) + p) % p;
-      el('circle', { class: 'line-dot', cx: X(x + 0.5), cy: Y(y + 0.5), r: 2.4 }, g);
-    }
+    for (const [x, y] of dots) el('circle', { class: 'line-dot', cx: X(x), cy: Y(y), r: 2.4 }, g);
   }
 
   function drawVertical(P) {

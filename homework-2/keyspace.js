@@ -2,7 +2,7 @@
 import { scalarMult, eq } from '../homework-1/part-1/ecc.js';
 import { SECP256K1, decrypt } from './elgamal.js';
 import { bruteForce, babyStepGiantStep, isqrtCeil, runToEnd } from './attack.js';
-import { $, tile, writeConsole, yieldToBrowser, shortPoint, group, sup, sci, duration } from './ui.js';
+import { $, tile, writeConsole, yieldToBrowser, shortPoint, group, sup, sci, duration, stage } from './ui.js';
 
 const { curve: C, G } = SECP256K1;
 const SLICE_MS = 40;
@@ -34,6 +34,7 @@ function reset() {
   $('k-tiles').replaceChildren();
   $('k-progress').value = 0;
   $('k-progress-label').textContent = '';
+  stage('bf', 'not run yet');
 }
 
 async function run() {
@@ -60,6 +61,7 @@ async function run() {
     lines.push(`  giant steps  Q − i·mG for i = 0, 1, … until a hit`);
   }
   writeConsole($('k-out'), [...lines, [['  running…', 'c-dim']]]);
+  stage('bf', `running ${method === 'brute' ? 'brute force' : 'baby-step giant-step'}…`);
 
   const t0 = performance.now();
   let res = null, done = 0n;
@@ -84,6 +86,7 @@ async function run() {
 
   if (!res) {
     lines.push([[`  stopped after ${group(done)} additions (${duration(secs)})`, 'c-warn']]);
+    stage('bf', 'stopped');
     writeConsole($('k-out'), lines);
     if (state.target !== target) reset();
     return;
@@ -98,6 +101,7 @@ async function run() {
   if (res.k === null) {
     lines.push([['  no key in the range', 'c-warn']]);
     writeConsole($('k-out'), lines);
+    stage('bf', 'no key in the range');
     return;
   }
   if (method === 'bsgs') {
@@ -114,6 +118,7 @@ async function run() {
     ['  decrypt  ', [`"${plain}"`, 'c-ok']],
   );
   writeConsole($('k-out'), lines);
+  stage('bf', `k = ${group(res.k)} ${ok ? '✓' : '✗'}\n${group(res.ops)} additions, ${duration(secs)}`);
   $('k-key').textContent = group(res.k);
   $('k-key-sub').textContent = `kG = Q ${ok ? '✓' : '✗'} · decrypts to "${plain.length > 40 ? plain.slice(0, 40) + '…' : plain}"`;
   $('k-tiles').replaceChildren(

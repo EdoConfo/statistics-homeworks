@@ -53,6 +53,12 @@ export const shortHex = (v) => {
 
 export const shortPoint = (P) => `(${shortHex(P.x)}, ${shortHex(P.y)})`;
 
+/** Write a value into the side panel of current values (layout.js), if the page has one. */
+export const stage = (name, text) => window.Stage?.set(name, text);
+export const stagePoint = (P) => `x ${shortHex(P.x)}\ny ${shortHex(P.y)}`;
+const clip = (s, n = 60) => (s.length > n ? s.slice(0, n) + '…' : s);
+export const stageText = (s) => `"${clip(s)}"`;
+
 export const group = (v) => v.toLocaleString('en-US');
 
 const SUP = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '-': '⁻', '.': '·' };

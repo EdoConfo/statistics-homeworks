@@ -6,10 +6,10 @@
   <title>Homework 2 · Statistics Homeworks</title>
   <meta name="description" content="Encrypting with a toy EC-ElGamal scheme on secp256k1 and with the Caesar cipher, statistical cryptanalysis of the Caesar cipher, and a key-space attack on the toy scheme.">
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="../assets/css/style.css?v=3">
+  <link rel="stylesheet" href="../assets/css/style.css?v=4">
   <link rel="stylesheet" href="hw2.css">
-  <script src="../assets/js/theme.js?v=3"></script>
-  <script src="../assets/js/layout.js?v=3"></script>
+  <script src="../assets/js/theme.js?v=4"></script>
+  <script src="../assets/js/layout.js?v=4"></script>
   <script type="module" src="app.js"></script>
 </head>
 <body>
@@ -17,14 +17,17 @@
 
   <main>
     <div class="wrap hero">
-      <h1>Homework 2</h1>
+      <h1>Toy ECC Scheme vs Caesar Cipher</h1>
       <p class="lede">One message, two ciphers. The same text is encrypted with a toy elliptic-curve scheme built on the Part 1 code
         and with the Caesar cipher. The Caesar cipher is then broken from letter statistics alone,
         and the toy scheme is broken by searching its small key space.</p>
     </div>
 
+    <div class="lab wrap">
+    <div class="lab-main">
+
     <!-- 01 ------------------------------------------------------------ -->
-    <section class="block" id="scheme">
+    <section class="block" id="scheme" data-stage="keygen encode encrypt decrypt">
       <div class="wrap">
         <div class="section-head"><span class="section-num">01</span><h2>Encrypting with the toy secp256k1 scheme</h2></div>
         <p class="section-sub">Part 1 turned a private key <var>k</var> into a public key <span class="math">Q = kG</span>.
@@ -37,21 +40,21 @@
           <div class="prose">
             <h3>The algorithm</h3>
             <ol class="steps">
-              <li><strong>Key generation</strong> (receiver). Pick <var>k</var> at random in <span class="math">[1, 2<sup>B</sup>]</span> and publish
+              <li data-stage="keygen"><strong>Key generation</strong> (receiver). Pick <var>k</var> at random in <span class="math">[1, 2<sup>B</sup>]</span> and publish
                 <span class="math">Q = kG</span>.</li>
-              <li><strong>Encoding.</strong> A curve can only add points, so the message must become a point.
+              <li data-stage="encode"><strong>Encoding.</strong> A curve can only add points, so the message must become a point.
                 The text is split into blocks of up to 30 bytes, each read as an integer <var>m</var>. Then
                 <span class="math">x = 256·m + j</span> for the first <span class="math">j = 0, 1, 2, …</span> that makes
                 <span class="math">x³ + 7</span> a square mod <var>p</var>, and <var>y</var> is its square root: <span class="math">M = (x, y)</span>.
                 About half of all <var>x</var> work, so <var>j</var> is usually 0, 1 or 2.</li>
-              <li><strong>Encryption</strong> (sender, knows only <var>Q</var>). Pick a fresh random <var>r</var> in <span class="math">[1, n − 1]</span>
+              <li data-stage="encrypt"><strong>Encryption</strong> (sender, knows only <var>Q</var>). Pick a fresh random <var>r</var> in <span class="math">[1, n − 1]</span>
                 and send <span class="math">C₁ = rG</span>, <span class="math">C₂ = M + rQ</span>.</li>
-              <li><strong>Decryption</strong> (receiver). Compute <span class="math">S = kC₁</span>, which equals <span class="math">rQ</span>
+              <li data-stage="decrypt"><strong>Decryption</strong> (receiver). Compute <span class="math">S = kC₁</span>, which equals <span class="math">rQ</span>
                 because <span class="math">k(rG) = r(kG)</span>, and recover <span class="math">M = C₂ − S</span>.
                 Dropping the last byte of <var>x</var> gives back <var>m</var> and the text.</li>
             </ol>
           </div>
-          <div>
+          <div data-stage="keygen encrypt decrypt">
             <h3>The role of the keys</h3>
             <div class="table-wrap">
               <table>
@@ -98,7 +101,7 @@
     </section>
 
     <!-- 02 ------------------------------------------------------------ -->
-    <section class="block" id="caesar">
+    <section class="block" id="caesar" data-stage="caesar">
       <div class="wrap">
         <div class="section-head"><span class="section-num">02</span><h2>The Caesar Cipher</h2></div>
         <p class="section-sub">Number the letters <span class="math">A = 0, B = 1, …, Z = 25</span>. The key is a shift <span class="math">K ∈ {0, …, 25}</span>,
@@ -127,7 +130,7 @@
     </section>
 
     <!-- 03 ------------------------------------------------------------ -->
-    <section class="block" id="compare">
+    <section class="block" id="compare" data-stage="encrypt caesar">
       <div class="wrap">
         <div class="section-head"><span class="section-num">03</span><h2>Comparing the two schemes</h2></div>
         <div class="table-wrap">
@@ -181,7 +184,7 @@
     </section>
 
     <!-- 04 ------------------------------------------------------------ -->
-    <section class="block" id="cryptanalysis">
+    <section class="block" id="cryptanalysis" data-stage="chi">
       <div class="wrap">
         <div class="section-head"><span class="section-num">04</span><h2>Statistical Cryptanalysis of the Caesar Cipher</h2></div>
         <p class="section-sub">A shift moves every letter by the same amount, so the <em>shape</em> of the letter distribution survives encryption.
@@ -235,7 +238,7 @@
     </section>
 
     <!-- 05 ------------------------------------------------------------ -->
-    <section class="block" id="length">
+    <section class="block" id="length" data-stage="chi">
       <div class="wrap">
         <div class="section-head"><span class="section-num">05</span><h2>Ciphertexts of different lengths</h2></div>
         <p class="section-sub">For each length, random pieces of the held-out text are encrypted with a random key in 1–25 and attacked.
@@ -293,7 +296,7 @@
     </section>
 
     <!-- 06 ------------------------------------------------------------ -->
-    <section class="block" id="keyspace">
+    <section class="block" id="keyspace" data-stage="attack">
       <div class="wrap">
         <div class="section-head"><span class="section-num">06</span><h2>Attacking the restricted key space</h2></div>
         <p class="section-sub">The attacker sees the public key <var>Q</var> and the ciphertext of section 01, and knows that <span class="math">k ≤ 2<sup>B</sup></span>.
@@ -350,6 +353,50 @@
         </div>
       </div>
     </section>
+
+    </div>
+
+    <aside class="stage" aria-label="Current values">
+      <p class="stage-title">Current values</p>
+      <div class="stage-block">
+        <p class="stage-group">Toy EC-ElGamal</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="keygen decrypt attack"><span class="stage-label">Private key k</span><span class="stage-note" data-stage-value="k-range">receiver</span><code class="stage-value" data-stage-value="k">–</code></li>
+            <li class="stage-op" data-for="keygen">Q = kG</li>
+            <li class="stage-node" data-for="keygen encrypt attack"><span class="stage-label">Public key Q</span><span class="stage-note">everyone</span><code class="stage-value" data-stage-value="Q">–</code></li>
+            <li class="stage-node gap" data-for="encode"><span class="stage-label">Message</span><span class="stage-note" data-stage-value="msg-bytes"></span><code class="stage-value" data-stage-value="msg">–</code></li>
+            <li class="stage-op" data-for="encode">x = 256·m + j</li>
+            <li class="stage-node" data-for="encode encrypt decrypt"><span class="stage-label">Point M</span><span class="stage-note" data-stage-value="M-blocks"></span><code class="stage-value" data-stage-value="M">–</code></li>
+            <li class="stage-op" data-for="encrypt">C₁ = rG,  C₂ = M + rQ</li>
+            <li class="stage-node" data-for="encrypt decrypt attack"><span class="stage-label">Ciphertext</span><span class="stage-note" data-stage-value="ct-size"></span><code class="stage-value" data-stage-value="ct">–</code></li>
+            <li class="stage-op" data-for="decrypt">M = C₂ − kC₁</li>
+            <li class="stage-node" data-for="decrypt"><span class="stage-label">Decrypted</span><span class="stage-note">with k</span><code class="stage-value" data-stage-value="dec">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+      <div class="stage-block">
+        <p class="stage-group">Caesar</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="caesar"><span class="stage-label">Message</span><span class="stage-note">from section 01</span><code class="stage-value" data-stage-value="msg">–</code></li>
+            <li class="stage-node gap" data-for="caesar chi"><span class="stage-label">Key K</span><span class="stage-note">shared</span><code class="stage-value" data-stage-value="K">–</code></li>
+            <li class="stage-op" data-for="caesar">c = (x + K) mod 26</li>
+            <li class="stage-node" data-for="caesar"><span class="stage-label">Ciphertext</span><code class="stage-value" data-stage-value="caesar-ct">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+      <div class="stage-block">
+        <p class="stage-group">Attacks</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="chi"><span class="stage-label">Caesar key from χ²</span><span class="stage-note">section 04</span><code class="stage-value" data-stage-value="chi">–</code></li>
+            <li class="stage-node gap" data-for="attack"><span class="stage-label">Toy private key</span><span class="stage-note">section 06</span><code class="stage-value" data-stage-value="bf">not run yet</code></li>
+          </ol>
+        </div></div>
+      </div>
+    </aside>
+    </div>
 
     <!-- 07 ------------------------------------------------------------ -->
     <section class="block" id="discussion">

@@ -7,33 +7,40 @@
   <meta name="description" content="Statistics homeworks by Edoardo Conforti, MSc Cybersecurity 2026–2027.">
   <meta name="author" content="Edoardo Conforti">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="assets/css/style.css?v=3">
-  <script src="assets/js/theme.js?v=3"></script>
-  <script src="assets/js/layout.js?v=3"></script>
+  <link rel="stylesheet" href="assets/css/style.css?v=4">
+  <script src="assets/js/theme.js?v=4"></script>
+  <script src="assets/js/layout.js?v=4"></script>
   <style>
-    .hw-grid { display: grid; gap: 22px; }
-    a.hw-card { --visual-w: 360px; display: grid; grid-template-columns: var(--visual-w) minmax(0, 1fr); grid-auto-rows: minmax(240px, auto); padding: 0; overflow: hidden; }
-    a.hw-card:nth-child(even) { grid-template-columns: minmax(0, 1fr) var(--visual-w); }
-    .hw-card:nth-child(even) .hw-visual { order: 2; border-right: 0; border-left: 1px solid var(--border); }
+    /* homework list: one entry per homework, picture alternating left and right */
+    .hw-list { display: grid; gap: 22px; max-width: 860px; margin-inline: auto; }
+    .hw-list .hw-entry { --visual-w: 280px; display: grid; grid-template-columns: var(--visual-w) minmax(0, 1fr); grid-auto-rows: minmax(200px, auto); padding: 0; overflow: hidden; }
+    .hw-entry.reverse { grid-template-columns: minmax(0, 1fr) var(--visual-w); }
+    .hw-entry.reverse .hw-visual { order: 2; border-right: 0; border-left: 1px solid var(--border); }
     .hw-visual { display: grid; place-items: center; background: var(--surface-2); border-right: 1px solid var(--border); }
-    .hw-body { padding: 28px 30px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
-    .hw-body h2 { font-size: 1.35rem; margin: 0; }
-    .hw-body p { margin: 0; color: var(--ink-2); }
+    .hw-body { padding: 26px 30px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+    .hw-body h2 { font-size: clamp(1.7rem, 3.2vw, 2.2rem); letter-spacing: -0.02em; margin: 0; }
+    .hw-sub { margin: 0; color: var(--ink-2); font-size: 1.05rem; }
+    .hw-parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+    .hw-parts li + li { margin-top: 0; }
+    .hw-parts a {
+      display: flex; align-items: baseline; gap: 10px; padding: 6px 10px; margin-left: -10px; border-radius: 8px;
+      color: var(--ink-2); font-size: 1.05rem; text-decoration: none; transition: background .15s, color .15s;
+    }
+    .hw-parts a::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); transform: translateY(-2px); }
+    .hw-parts a::after { content: "→"; margin-left: auto; padding-left: 8px; color: var(--muted); opacity: 0; transform: translateX(-4px); transition: opacity .15s, transform .15s; }
+    .hw-parts a:hover { background: var(--surface-2); color: var(--ink); }
+    .hw-parts a:hover::after, .hw-parts a:focus-visible::after { opacity: 1; transform: none; }
+    .hw-parts .part { font: 600 0.78rem/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-ink); white-space: nowrap; }
     @media (max-width: 720px) {
-      a.hw-card, a.hw-card:nth-child(even) { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; }
-      .hw-card .hw-visual, .hw-card:nth-child(even) .hw-visual { order: 0; border: 0; border-bottom: 1px solid var(--border); min-height: 190px; }
+      .hw-list .hw-entry, .hw-list .hw-entry.reverse { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; }
+      .hw-entry .hw-visual, .hw-entry.reverse .hw-visual { order: 0; border: 0; border-bottom: 1px solid var(--border); min-height: 180px; }
       .hw-body { padding: 20px 22px 22px; }
     }
-    .hw-num { font: 600 0.78rem/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-ink); }
     .curve-mini { width: 200px; height: 180px; }
     .curve-mini .g { stroke: var(--grid); stroke-width: 1; }
     .curve-mini .s { fill: var(--series-1); }
     .curve-mini .o { fill: var(--axis); }
     .curve-mini .l { stroke: var(--series-2); stroke-width: 1.6; opacity: .85; }
-    .chain { display: grid; gap: 6px; font: 0.82rem/1.3 var(--mono); text-align: center; color: var(--ink-2); }
-    .chain .pill { padding: 5px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border-strong); color: var(--ink); }
-    .chain .arrow { color: var(--muted); font-size: 0.75rem; }
-    .chain .pill.final { background: var(--ink); color: var(--page); border-color: var(--ink); }
     .course { color: var(--muted); font-size: 0.95rem; margin-bottom: 10px; }
     .freq-mini { width: 218px; height: 176px; }
     .freq-mini text { font: 10px var(--sans); fill: var(--muted); }
@@ -55,8 +62,8 @@
 
     <section class="block">
       <div class="wrap">
-        <div class="hw-grid">
-          <a class="card card-link hw-card" id="part-1" data-rail="Homework 1 · Part 1" href="homework-1/part-1/">
+        <div class="hw-list">
+          <article class="card hw-entry" id="homework-1" data-rail="Homework 1">
             <div class="hw-visual" aria-hidden="true">
               <svg class="curve-mini" viewBox="0 0 180 180">
                 <g>
@@ -68,30 +75,15 @@
               </svg>
             </div>
             <div class="hw-body">
-              <span class="hw-num">Homework 1 · Part 1</span>
-              <h2>Example App: Public-Key Cryptography PRIVATE KEY → PUBLIC KEY in Ethereum</h2>
-              <p>Scalar multiplication Q = kG on y² = x³ + 7 (mod 17), with a step-by-step animation and a statistical look at the outputs.</p>
+              <h2>Homework 1</h2>
+              <ul class="hw-parts">
+                <li><a href="homework-1/part-1/"><span class="part">Part 1</span><span>Private Key → Public Key in Ethereum</span></a></li>
+                <li><a href="homework-1/part-2/"><span class="part">Part 2</span><span>From Wallet Seed to Ethereum Address</span></a></li>
+              </ul>
             </div>
-          </a>
+          </article>
 
-          <a class="card card-link hw-card" id="part-2" data-rail="Homework 1 · Part 2" href="homework-1/part-2/">
-            <div class="hw-visual" aria-hidden="true">
-              <div class="chain">
-                <span class="pill">test test test … junk</span>
-                <span class="arrow">BIP-39 · BIP-32 · BIP-44</span>
-                <span class="pill">k = ac0974be…f2ff80</span>
-                <span class="arrow">secp256k1 · Keccak-256 · EIP-55</span>
-                <span class="pill final">0xf39Fd6e5…b92266</span>
-              </div>
-            </div>
-            <div class="hw-body">
-              <span class="hw-num">Homework 1 · Part 2</span>
-              <h2>From Wallet Seed to Ethereum Address: Hashing, Key Derivation and Cryptographic Primitives</h2>
-              <p>The wallet pipeline step by step, from BIP-39 seed phrase to EIP-55 address, with a live demo and Monte Carlo checks.</p>
-            </div>
-          </a>
-
-          <a class="card card-link hw-card" id="homework-2" data-rail="Homework 2" href="homework-2/">
+          <a class="card card-link hw-entry reverse" id="homework-2" data-rail="Homework 2" href="homework-2/">
             <div class="hw-visual" aria-hidden="true">
               <svg class="freq-mini" viewBox="0 0 218 176">
                 <text x="6" y="10">plaintext</text><text x="6" y="94">Caesar, K = 3</text>
@@ -103,7 +95,7 @@
             </div>
             <div class="hw-body">
               <h2>Homework 2</h2>
-              <p>A message encrypted with a toy EC-ElGamal scheme on secp256k1 and with the Caesar cipher. The Caesar key is recovered from letter statistics, the toy private key by searching its small key space.</p>
+              <p class="hw-sub">Toy ECC Scheme vs Caesar Cipher</p>
             </div>
           </a>
         </div>
