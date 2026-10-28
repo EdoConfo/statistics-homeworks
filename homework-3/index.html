@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homework 3 · Statistics Homeworks</title>
+  <meta name="description" content="n systems and m attackers: penetration scores as random walks with Bernoulli and Rademacher increments, the Law of Large Numbers, the variance under three normalizations and the Central Limit Theorem.">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/css/style.css?v=7">
+  <link rel="stylesheet" href="hw3.css">
+  <script src="../assets/js/theme.js?v=7"></script>
+  <script src="../assets/js/layout.js?v=7"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <site-header homework="3"></site-header>
+
+  <main>
+    <div class="wrap hero">
+      <h1>Penetration Scores as Random Walks</h1>
+      <p class="lede"><var>m</var> attackers each work through <var>n</var> systems. Every attempt adds a score <span class="math">Xᵢ</span>,
+        so the running total of each attacker is a random walk. Simulating many of these walks shows how the total, the average and the
+        normalized total behave as <var>n</var> grows: the Law of Large Numbers, how the variance scales, and the Central Limit Theorem.</p>
+    </div>
+
+    <div class="lab wrap">
+    <div class="lab-main">
+
+    <!-- 01 ------------------------------------------------------------ -->
+    <section class="block" id="model" data-stage="model">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">01</span><h2>The model</h2></div>
+        <p class="section-sub">Attacker <var>j</var> works through systems <span class="math">1, 2, …, n</span> and gets a score
+          <span class="math">Xᵢ<sup>(j)</sup></span> at system <var>i</var>. All scores are independent and identically distributed.
+          The attacker's total after <var>k</var> systems, <span class="math">Sₖ = X₁ + … + Xₖ</span>, is a random walk:
+          one trajectory per attacker, so <var>m</var> attackers give <var>m</var> independent trajectories.</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Model</th><th>Score Xᵢ</th><th class="num">μ = E[X]</th><th class="num">σ² = Var X</th><th>Reading</th></tr></thead>
+            <tbody>
+              <tr><td>Bernoulli</td><td class="nowrap">0 or 1, P(Xᵢ = 1) = p</td><td class="num mono">p</td><td class="num mono">p(1 − p)</td>
+                <td>1: system <var>i</var> is penetrated, 0: the attack fails. <span class="math">Sₙ</span> counts the systems penetrated.</td></tr>
+              <tr><td>Rademacher</td><td class="nowrap">−1 or +1, ½ each</td><td class="num mono">0</td><td class="num mono">1</td>
+                <td>+1: the attacker gains ground, −1: it is pushed back. <span class="math">Sₙ</span> is the net progress, with no drift towards either side.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid grid-2 mt-3">
+          <div class="prose">
+            <h3>Three ways to look at the score</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Quantity</th><th class="num">Mean</th><th class="num">Variance</th></tr></thead>
+                <tbody>
+                  <tr><td>Total score <span class="math">Sₙ</span></td><td class="num mono">nμ</td><td class="num mono">nσ²</td></tr>
+                  <tr><td>Average score <span class="math">Sₙ/n</span></td><td class="num mono">μ</td><td class="num mono">σ²/n</td></tr>
+                  <tr><td>Normalized total score <span class="math">Sₙ/√n</span></td><td class="num mono">√n·μ</td><td class="num mono">σ²</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="mt-2">Independence makes the variances add up: <span class="math">Var Sₙ = Var X₁ + … + Var Xₙ = nσ²</span>.
+              Dividing by <var>c</var> divides the variance by <span class="math">c²</span>, that is by <span class="math">n²</span> for the average
+              and by <var>n</var> for the normalized score. Everything else on this page follows from these three lines.</p>
+          </div>
+          <div class="prose">
+            <h3>Why two models</h3>
+            <p>The Bernoulli score only grows: <span class="math">Sₙ</span> has a drift <span class="math">np</span> that dominates, and the three
+              quantities mostly differ in how they scale that drift. The Rademacher model is the symmetric, zero-mean case: there is no drift,
+              only the fluctuations around 0, and these are what the Central Limit Theorem describes.</p>
+          </div>
+        </div>
+
+        <h3 class="mt-3">One experiment as a table</h3>
+        <p class="small muted">Rows are attackers, columns are systems, one cell per attempt. The number after each row is that attacker's total
+          <span class="math">Sₙ</span>. The bars under each column count the attackers who scored on that system.
+          Adding up the whole table gives the aggregate score of the experiment, studied in section 07.</p>
+        <div class="matrix-pair">
+          <div><p class="chart-title" id="mx-b-title">Bernoulli</p><div class="matrix" id="mx-b"></div></div>
+          <div><p class="chart-title">Rademacher</p><div class="matrix" id="mx-r"></div></div>
+        </div>
+        <div class="controls mt-2 mb-0">
+          <button class="btn" type="button" id="mx-run">New draw</button>
+          <span class="small muted" id="mx-legend"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 ------------------------------------------------------------ -->
+    <section class="block" id="trajectories" data-stage="sim">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">02</span><h2>Simulated trajectories</h2></div>
+        <p class="section-sub">Each line is one attacker. The same simulation is drawn three times, once for each quantity, with the expected value and
+          the band <em>expected value ± 2 standard deviations</em> dashed. On the right, the histogram of the final values over the <var>m</var> attackers
+          and the normal density with the same mean and variance. Changing <var>m</var> adds or removes lines without changing how each one behaves:
+          the histogram only gets smoother.</p>
+
+        <div class="controls">
+          <div class="field"><span class="field-label">Model</span>
+            <div class="segmented" role="group" aria-label="Model">
+              <button type="button" data-model="bernoulli" aria-pressed="true">Bernoulli</button>
+              <button type="button" data-model="rademacher" aria-pressed="false">Rademacher</button>
+            </div>
+          </div>
+          <label class="field" id="s-p-field"><span>Success probability p = <output id="s-p-val">0.30</output></span><input id="s-p" type="range" min="0.05" max="0.95" step="0.05" value="0.3"></label>
+          <label class="field"><span>Systems n</span><select id="s-n"></select></label>
+          <label class="field"><span>Attackers m</span><select id="s-m"></select></label>
+          <button class="btn primary" type="button" id="s-run">New simulation</button>
+        </div>
+        <p class="small muted" id="s-status"></p>
+
+        <div class="traj-stack">
+          <div data-stage="sim"><p class="chart-title">Total score <span class="math">Sₖ</span></p><p class="chart-sub" id="t-total-sub"></p><div id="t-total"></div></div>
+          <div data-stage="sim"><p class="chart-title">Average score <span class="math">Sₖ/k</span></p><p class="chart-sub" id="t-average-sub"></p><div id="t-average"></div></div>
+          <div data-stage="sim"><p class="chart-title">Normalized total score <span class="math">Sₖ/√k</span></p><p class="chart-sub" id="t-normalized-sub"></p><div id="t-normalized"></div></div>
+        </div>
+
+        <h3 class="mt-3">At the last system, k = n</h3>
+        <div class="table-wrap">
+          <table id="s-table">
+            <thead><tr><th>Quantity</th><th class="num">Mean, simulated</th><th class="num">Mean, expected</th><th class="num">Variance, simulated</th><th class="num">Variance, expected</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="grid grid-3 mt-3 reading">
+          <div class="prose">
+            <h3>Total score</h3>
+            <p>Each line counts the systems an attacker has penetrated so far (Bernoulli) or its net progress (Rademacher).
+              The lines fan out like <span class="math">√k</span>: after <var>k</var> systems two attackers typically differ by a few <span class="math">σ√k</span>.
+              In the Bernoulli model they also climb together along <span class="math">kp</span>: more systems, more penetrations, for every attacker.</p>
+          </div>
+          <div class="prose">
+            <h3>Average score</h3>
+            <p>Each line is an attacker's success rate so far. After a few systems the rates are scattered over the whole range, after many systems
+              every attacker is close to the same rate <span class="math">μ</span>, inside <span class="math">μ ± 2σ/√k</span>:
+              a long campaign reveals the per-system success probability. This is the Law of Large Numbers, attacker by attacker.</p>
+          </div>
+          <div class="prose">
+            <h3>Normalized total score</h3>
+            <p>Dividing by <span class="math">√k</span> exactly cancels the growth of the spread: the band <span class="math">√k·μ ± 2σ</span> has the same
+              width for every <var>k</var>. In the Rademacher model the lines stay centred on 0 and the histogram on the right is the normal bell of the
+              Central Limit Theorem. In the Bernoulli model they drift upwards with <span class="math">√k·p</span>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 ------------------------------------------------------------ -->
+    <section class="block" id="grow" data-stage="grow">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">03</span><h2>Distributions as n grows</h2></div>
+        <p class="section-sub">Sections 03 to 06 use one larger simulation: <var>m</var> attackers in each model, each followed for 10 000 systems, with the
+          score recorded at <span class="math">n = 1, 2, 5, 10, 20, …, 10 000</span>. The same trajectories are read at increasing <var>n</var>.</p>
+        <p class="section-sub">How large should <var>m</var> be? Every histogram, mean and variance below is estimated from the <var>m</var> attackers, and
+          the estimation error shrinks like <span class="math">1/√m</span>. With <span class="math">m = 5 000</span> a variance is estimated to within about ±4%
+          (<span class="math">2·√(2/m)</span>), enough to see each shape clearly: <span class="math">m = 1 000</span> is visibly noisier,
+          <span class="math">m = 20 000</span> smoother but slower.</p>
+
+        <div class="controls">
+          <label class="field"><span>Attackers m</span><select id="x-m"></select></label>
+          <button class="btn" type="button" id="x-run">Run again</button>
+          <span class="small muted" id="x-status"></span>
+        </div>
+
+        <div class="controls">
+          <div class="field"><span class="field-label">Model</span>
+            <div class="segmented" role="group" aria-label="Model for the histograms">
+              <button type="button" data-grow="bernoulli" aria-pressed="true">Bernoulli</button>
+              <button type="button" data-grow="rademacher" aria-pressed="false">Rademacher</button>
+            </div>
+          </div>
+        </div>
+        <p class="small muted">Histograms of the <var>m</var> attackers, dashed: the normal density with the expected mean and variance.
+          Within a row every panel has the same horizontal scale and is centred on its expected value, so widths can be compared directly
+          (heights are scaled per panel).</p>
+        <div class="multiples" id="g-grid"></div>
+
+        <div class="grid grid-3 mt-3 reading">
+          <div class="prose"><p><strong>Total score.</strong> The histogram gets wider as <var>n</var> grows: the standard deviation is
+            <span class="math">σ√n</span>, ten times larger for every hundredfold increase of <var>n</var>. <span class="math">Sₙ</span> has no limit.</p></div>
+          <div class="prose"><p><strong>Average score.</strong> The histogram shrinks onto <span class="math">μ</span>: the standard deviation is
+            <span class="math">σ/√n</span>, a hundred times smaller at <span class="math">n = 10 000</span> than at <span class="math">n = 1</span>. The limit is a single point.</p></div>
+          <div class="prose"><p><strong>Normalized total score.</strong> The width stays the same, standard deviation <var>σ</var> for every <var>n</var>, and the
+            shape turns into a bell. Rademacher stays centred on 0, Bernoulli moves right with its mean <span class="math">√n·p</span>.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 ------------------------------------------------------------ -->
+    <section class="block" id="lln" data-stage="lln">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">04</span><h2>The average score and the Law of Large Numbers</h2></div>
+        <p class="section-sub">The weak Law of Large Numbers says that <span class="math">Sₙ/n</span> converges in probability to <span class="math">μ</span>:
+          for every tolerance <span class="math">ε &gt; 0</span>, <span class="math">P(|Sₙ/n − μ| ≥ ε) → 0</span> as <span class="math">n → ∞</span>.
+          With the variance <span class="math">σ²/n</span>, Chebyshev's inequality proves it in one line:</p>
+        <div class="math-block">P(|Sₙ/n − μ| ≥ ε) ≤ Var(Sₙ/n) / ε² = σ² / (nε²) → 0</div>
+
+        <div class="controls">
+          <label class="field"><span>Tolerance ε</span><select id="l-eps"></select></label>
+        </div>
+        <div class="grid grid-2">
+          <div><p class="chart-title">Bernoulli</p><p class="chart-sub" id="l-b-sub"></p><div id="l-b"></div></div>
+          <div><p class="chart-title">Rademacher</p><p class="chart-sub">P(|Sₙ/n| ≥ ε)</p><div id="l-r"></div></div>
+        </div>
+        <div class="grid grid-2 mt-2">
+          <div class="prose">
+            <h3>What the chart shows</h3>
+            <ul>
+              <li><strong>The probability goes to zero.</strong> The share of attackers whose average is off by at least <var>ε</var> falls to 0 as <var>n</var>
+                grows, for every <var>ε</var>: a smaller tolerance only needs more systems. This is convergence in probability. For small <var>n</var>
+                the curve zigzags because <span class="math">Sₙ/n</span> can only take a few values; the trend is what matters.</li>
+              <li><strong>Chebyshev's bound</strong> goes to zero too, and is what proves the law. It only uses the variance, so it sits well above the
+                simulated share.</li>
+            </ul>
+          </div>
+          <div class="prose">
+            <h3>Reading it for attackers</h3>
+            <p>Every attacker has the same success rate <var>p</var> per system. After a few systems the observed rates are scattered, after thousands of
+              systems they are all close to <var>p</var>: a long attack campaign reveals the true rate, and a defender who watches many attempts can estimate
+              <var>p</var> from the average. The precision improves only like <span class="math">1/√n</span>: one more decimal digit needs a hundred times more systems.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 ------------------------------------------------------------ -->
+    <section class="block" id="variance" data-stage="var">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">05</span><h2>The variance under the three normalizations</h2></div>
+        <p class="section-sub">For <span class="math">Sₙ / nᵃ</span> the variance is <span class="math">nσ² / n²ᵃ = σ²·n¹⁻²ᵃ</span>. On a log–log scale this is a
+          straight line of slope <span class="math">1 − 2a</span>: +1 for the total (<span class="math">a = 0</span>), −1 for the average (<span class="math">a = 1</span>)
+          and 0 for the normalized score (<span class="math">a = ½</span>). Dots: sample variance over the <var>m</var> attackers. Dashed: <span class="math">σ²·n¹⁻²ᵃ</span>.</p>
+        <div class="grid grid-2">
+          <div><p class="chart-title">Bernoulli</p><p class="chart-sub" id="v-b-sub"></p><div id="v-b"></div></div>
+          <div><p class="chart-title">Rademacher</p><p class="chart-sub">σ² = 1</p><div id="v-r"></div></div>
+        </div>
+        <div class="table-wrap mt-2">
+          <table id="v-table">
+            <thead><tr><th>Quantity</th><th class="num">Variance</th><th class="num">Slope, expected</th><th class="num">Slope fitted, Bernoulli</th><th class="num">Slope fitted, Rademacher</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="prose mt-2">
+          <p><span class="math">a = ½</span> is the only exponent that keeps the variance finite and non-zero. A smaller power lets the spread blow up, a larger one
+            squeezes everything into a point. This is why <span class="math">√n</span> is the scale on which a limit <em>distribution</em> can appear,
+            while <span class="math">n</span> is the scale of the Law of Large Numbers, where the limit is a constant.</p>
+          <p>The dots wobble slightly around the lines because each variance is estimated from <var>m</var> attackers (relative error about
+            <span class="math">√(2/m)</span>), so the fitted slopes are close to, not exactly, 1, −1 and 0.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 ------------------------------------------------------------ -->
+    <section class="block" id="clt" data-stage="clt">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">06</span><h2>The normalized score and the Central Limit Theorem</h2></div>
+        <p class="section-sub">In the Rademacher model <span class="math">μ = 0</span> and <span class="math">σ = 1</span>, so the Central Limit Theorem applies to
+          <span class="math">Sₙ/√n</span> as it is: <span class="math">Sₙ/√n</span> converges in distribution to N(0, 1), that is
+          <span class="math">P(Sₙ/√n ≤ x) → Φ(x)</span> for every <var>x</var>, where <var>Φ</var> is the standard normal distribution function.</p>
+
+        <div class="controls">
+          <label class="field"><span>Systems n</span><select id="c-n"></select></label>
+        </div>
+        <div class="tiles" id="c-tiles"></div>
+        <div class="grid grid-2">
+          <div><p class="chart-title">Histogram of <span class="math">Sₙ/√n</span> and the N(0, 1) density</p><p class="chart-sub" id="c-hist-sub"></p><div id="c-hist"></div></div>
+          <div><p class="chart-title">Distribution function of <span class="math">Sₙ/√n</span> and <var>Φ</var></p><p class="chart-sub" id="c-cdf-sub"></p><div id="c-cdf"></div></div>
+        </div>
+
+        <div class="grid grid-2 mt-3">
+          <div class="prose">
+            <h3>What the charts show</h3>
+            <ul>
+              <li><strong>A two-point start.</strong> <span class="math">S₁</span> is −1 or +1, nothing like a bell. Every system adds one more coin and the
+                histogram fills in.</li>
+              <li><strong>The bell appears early.</strong> By <span class="math">n = 20</span> the histogram already follows the N(0, 1) density, its mean and
+                variance are close to 0 and 1, and about 95% of the attackers have <span class="math">|Sₙ/√n| ≤ 1.96</span>.</li>
+              <li><strong>A staircase that becomes Φ.</strong> <span class="math">Sₙ/√n</span> only takes values <span class="math">2/√n</span> apart, so its
+                distribution function is a staircase. The steps shrink as <var>n</var> grows and the staircase closes in on <var>Φ</var>:
+                the largest gap, shown above the chart, gets smaller.</li>
+            </ul>
+          </div>
+          <div class="prose">
+            <h3>Why the Rademacher case</h3>
+            <p>In the Bernoulli model <span class="math">Sₙ/√n</span> has mean <span class="math">√n·p</span>, which grows without bound, and variance
+              <span class="math">p(1 − p)</span>: it does not converge to N(0, 1). It must first be centred and scaled,
+              <span class="math">(Sₙ − np)/√(np(1 − p)) → N(0, 1)</span>. The symmetric, zero-mean Rademacher model is the case where
+              <span class="math">Sₙ/√n</span> converges as it is.</p>
+            <p>For the attackers: after <var>n</var> systems the net progress of a typical attacker is of order <span class="math">√n</span>, and the share of
+              attackers beyond <span class="math">c·√n</span> in either direction is read off the normal table, about 5% for <span class="math">c = 1.96</span>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 ------------------------------------------------------------ -->
+    <section class="block" id="attackers" data-stage="attackers">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">07</span><h2>n systems, m attackers and the aggregate score</h2></div>
+        <p class="section-sub">The aggregate penetration score of one experiment is the sum over all attackers,
+          <span class="math">Tₙ = Sₙ⁽¹⁾ + … + Sₙ⁽ᵐ⁾</span>, the sum of the whole table of section 01. In the Bernoulli model it counts every successful
+          attempt of every attacker. It is a sum of <span class="math">nm</span> independent scores, so the results above apply to it with
+          <span class="math">nm</span> in place of <var>n</var>:</p>
+        <div class="math-block">E[Tₙ] = nmμ,   Var Tₙ = nmσ²,   Tₙ/(nm) → μ in probability,   Var(Tₙ/√(nm)) = σ²</div>
+
+        <div class="controls">
+          <div class="field"><span class="field-label">Model</span>
+            <div class="segmented" role="group" aria-label="Model for the aggregate score">
+              <button type="button" data-agg="bernoulli" aria-pressed="true">Bernoulli</button>
+              <button type="button" data-agg="rademacher" aria-pressed="false">Rademacher</button>
+            </div>
+          </div>
+          <span class="small muted" id="a-status"></span>
+        </div>
+
+        <p class="chart-title">The aggregate trajectory: rate <span class="math">Tₖ/(km)</span> of one experiment on 1 000 systems</p>
+        <p class="chart-sub" id="a-traj-sub"></p>
+        <div id="a-traj"></div>
+
+        <h3 class="mt-3">How n and m change the aggregate score</h3>
+        <p class="small muted" id="a-grid-sub"></p>
+        <div class="multiples" id="a-grid"></div>
+
+        <div class="grid grid-2 mt-3">
+          <div class="prose">
+            <h3>What the system size n changes</h3>
+            <ul>
+              <li><strong>Each attacker's own score.</strong> Its total has mean <span class="math">nμ</span> and spread <span class="math">σ√n</span>,
+                its rate settles on <span class="math">μ</span> (sections 02 to 04).</li>
+              <li><strong>The aggregate score</strong> grows like <span class="math">nmμ</span>, with a spread that grows only like <span class="math">σ√(nm)</span>.</li>
+            </ul>
+            <h3>What the number of attackers m changes</h3>
+            <ul>
+              <li><strong>Not the distribution of a single attacker.</strong> The trajectories are independent and identical for any <var>m</var>.
+                More attackers only give more trajectories, so the histograms and averages of the previous sections become more precise.</li>
+              <li><strong>The aggregate score.</strong> <var>m</var> multiplies its expected value, <span class="math">E[Tₙ] = nmμ</span>, while its spread grows
+                only like <span class="math">√m</span>: in the chart above, more attackers make the aggregate rate settle on <span class="math">μ</span> sooner.</li>
+            </ul>
+          </div>
+          <div class="prose">
+            <h3>Only the product nm counts</h3>
+            <p>For the aggregate score, systems and attackers are interchangeable: 10 attackers on 100 systems give the same distribution as 100 attackers on
+              10 systems, and the panels with the same <span class="math">nm</span> have the same width. The relative spread,
+              <span class="math">σ/(μ√(nm))</span>, shrinks as the attack grows: for a defender, the total damage of a large attack is predictable.
+              For example, with <span class="math">p = 0.3</span>, 100 attackers on 100 systems penetrate 3 000 ± 92 attacker–system pairs (95% band),
+              a rate of 30% ± 0.9%.</p>
+            <p>In the Rademacher model the aggregate net progress is centred on 0 with spread <span class="math">√(nm)</span>, and
+              <span class="math">Tₙ/√(nm)</span> converges to N(0, 1): attackers pushed back and attackers gaining ground cancel out on average.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    </div>
+
+    <aside class="stage" aria-label="Current values">
+      <p class="stage-title">Current values</p>
+      <div class="stage-block">
+        <p class="stage-group">Model</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="model sim"><span class="stage-label">Increments X</span><span class="stage-note" data-stage-value="model-name">–</span><code class="stage-value" data-stage-value="model">–</code></li>
+            <li class="stage-node" data-for="model sim lln var clt"><span class="stage-label">μ and σ²</span><code class="stage-value" data-stage-value="moments">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+      <div class="stage-block">
+        <p class="stage-group">Trajectories</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="sim"><span class="stage-label">Simulation</span><span class="stage-note" data-stage-value="sim-seed"></span><code class="stage-value" data-stage-value="sim">–</code></li>
+            <li class="stage-node gap" data-for="sim"><span class="stage-label">Sₙ</span><span class="stage-note">mean · variance</span><code class="stage-value" data-stage-value="sim-total">–</code></li>
+            <li class="stage-node" data-for="sim"><span class="stage-label">Sₙ/n</span><span class="stage-note">mean · variance</span><code class="stage-value" data-stage-value="sim-average">–</code></li>
+            <li class="stage-node" data-for="sim"><span class="stage-label">Sₙ/√n</span><span class="stage-note">mean · variance</span><code class="stage-value" data-stage-value="sim-normalized">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+      <div class="stage-block">
+        <p class="stage-group">Experiments</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="grow lln var clt"><span class="stage-label">Simulation</span><span class="stage-note">both models</span><code class="stage-value" data-stage-value="x-sim">–</code></li>
+            <li class="stage-node gap" data-for="lln"><span class="stage-label">P(|Sₙ/n − μ| ≥ ε)</span><span class="stage-note" data-stage-value="lln-note"></span><code class="stage-value" data-stage-value="lln">–</code></li>
+            <li class="stage-node" data-for="var"><span class="stage-label">Variance slopes</span><span class="stage-note">Bernoulli</span><code class="stage-value" data-stage-value="var">–</code></li>
+            <li class="stage-node" data-for="clt"><span class="stage-label">Sₙ/√n against N(0, 1)</span><span class="stage-note" data-stage-value="clt-note"></span><code class="stage-value" data-stage-value="clt">–</code></li>
+            <li class="stage-node gap" data-for="attackers"><span class="stage-label">Aggregate score Tₙ</span><span class="stage-note" data-stage-value="att-note"></span><code class="stage-value" data-stage-value="att">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+    </aside>
+    </div>
+
+    <!-- 08 ------------------------------------------------------------ -->
+    <section class="block" id="summary">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">08</span><h2>Summary</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Quantity</th><th>Mean</th><th>Variance</th><th>Bernoulli, n → ∞</th><th>Rademacher, n → ∞</th><th>Result</th></tr></thead>
+            <tbody>
+              <tr><td>Total score <span class="math">Sₙ</span></td><td class="mono">nμ</td><td class="mono">nσ²</td>
+                <td>Grows like <span class="math">np</span>, spread <span class="math">σ√n</span>: no limit</td>
+                <td>Centred on 0, spread <span class="math">√n</span>: no limit</td><td>Variance grows linearly</td></tr>
+              <tr><td>Average score <span class="math">Sₙ/n</span></td><td class="mono">μ</td><td class="mono">σ²/n</td>
+                <td>→ <var>p</var> in probability</td><td>→ 0 in probability</td><td>Law of Large Numbers</td></tr>
+              <tr><td>Normalized total score <span class="math">Sₙ/√n</span></td><td class="mono">√n·μ</td><td class="mono">σ²</td>
+                <td>Mean <span class="math">√n·p → ∞</span>: no limit. After centring and scaling → N(0, 1)</td>
+                <td>→ N(0, 1) in distribution</td><td>Central Limit Theorem</td></tr>
+              <tr><td>Aggregate score <span class="math">Tₙ</span> of <var>m</var> attackers</td><td class="mono">nmμ</td><td class="mono">nmσ²</td>
+                <td><span class="math">Tₙ/(nm) → p</span>, spread shrinks like <span class="math">1/√(nm)</span></td>
+                <td><span class="math">Tₙ/√(nm) → N(0, 1)</span></td><td>Same laws with <span class="math">nm</span> in place of <var>n</var></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="prose mt-3">
+          <ul>
+            <li><strong>The normalization chooses the question.</strong> <span class="math">Sₙ</span> answers "how many systems", <span class="math">Sₙ/n</span>
+              "at what rate", <span class="math">Sₙ/√n</span> "how large are the fluctuations around the trend".</li>
+            <li><strong>Size brings predictability.</strong> The share of systems an attacker penetrates converges to <var>p</var>, and its uncertainty falls like
+              <span class="math">1/√n</span>. The number of systems, on the other hand, keeps a spread of order <span class="math">√n</span>.</li>
+            <li><strong>More attackers do not change the law of one attacker</strong>, but they add up: the aggregate score has mean <span class="math">nmμ</span>
+              and spread <span class="math">σ√(nm)</span>, so only the product <span class="math">nm</span> matters and the aggregate rate settles on <span class="math">μ</span>
+              faster as the attack grows.</li>
+            <li><strong>The symmetric case</strong> is the cleanest setting for the Central Limit Theorem: with zero mean and unit variance, <span class="math">Sₙ/√n</span>
+              itself converges to N(0, 1).</li>
+            <li><strong>The choice of m</strong> sets the precision of everything estimated from the simulation, with errors shrinking like <span class="math">1/√m</span>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <site-footer></site-footer>
+  <template id="assignment">
+    <h3>HMWK 3</h3>
+    <p>Consider n systems and m attackers. Model the penetration process using a stochastic process with independent and identically distributed increments X₁, X₂, …, representing the penetration score at each step. Consider two possible models for the score:</p>
+    <ul>
+      <li>Bernoulli model: Xᵢ ∈ {0,1}, with P(Xᵢ = 1) = p.</li>
+      <li>Rademacher model: Xᵢ ∈ {−1,+1}, with P(Xᵢ = +1) = P(Xᵢ = −1) = 1/2. This second model is introduced to study the symmetric, zero-mean case.</li>
+    </ul>
+    <p>For increasing values of n and suitable choices of m, simulate multiple sample trajectories and study the distributions of the following three quantities:</p>
+    <ul>
+      <li>Total score: Sₙ = ∑ᵢ₌₁ⁿ Xᵢ</li>
+      <li>Average score: Sₙ/n = (1/n)∑ᵢ₌₁ⁿ Xᵢ</li>
+      <li>Normalized total score: Sₙ/√n = (1/√n)∑ᵢ₌₁ⁿ Xᵢ</li>
+    </ul>
+    <p>Compare the behavior of these quantities as n increases. In particular, investigate the convergence in probability of Sₙ/n according to the Law of Large Numbers, the behavior of the variance under the different normalizations, and the convergence in distribution of Sₙ/√n to a standard normal distribution in the Rademacher case, according to the Central Limit Theorem. Interpret the simulated trajectories in the context of the n systems and m attackers, discussing how the system size and number of attackers affect the aggregate penetration score.</p>
+  </template>
+</body>
+</html>

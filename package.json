@@ -2,7 +2,7 @@
   "name": "statistics-homeworks",
   "version": "1.0.0",
   "private": true,
-  "description": "Statistics homeworks (MSc Cybersecurity): toy elliptic-curve cryptography, the Ethereum wallet pipeline, and the Caesar cipher vs toy EC-ElGamal, with statistical experiments and attacks.",
+  "description": "Statistics homeworks (MSc Cybersecurity): toy elliptic-curve cryptography, the Ethereum wallet pipeline, the Caesar cipher vs toy EC-ElGamal, and penetration scores as random walks (LLN and CLT), with statistical experiments and attacks.",
   "type": "module",
   "scripts": {
     "test": "node --test \"tests/**/*.test.js\"",

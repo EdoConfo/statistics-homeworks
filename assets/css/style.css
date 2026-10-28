@@ -425,115 +425,86 @@ details.data-table .table-wrap { margin-top: 6px; max-height: 260px; overflow: a
   .rail a.active { color: var(--ink); font-weight: 600; }
 }
 
-/* ---------- part switch: a raised segmented control at the top of a homework split into parts ----------
+/* ---------- part switch: a tab hanging from the header of a homework split into parts ----------
    <div class="part-bar"><nav class="seg3d" data-active="1"><span class="seg3d-thumb"></span><a …>Part 1</a><a …>Part 2</a></nav></div>
-   Each segment is a link to its part's page; layout.js slides the thumb before following it.
-   Once the page scrolls, layout.js adds .docked: the switch shrinks to the current part only and hangs from the
-   header like a tab. Clicking the tab adds .open and the full switch unfolds, still attached to the header. */
+   Each segment is a link to its part's page. layout.js draws the header's bottom line and the tab's outline as one
+   SVG path (.part-shape) and gives the header a glass (.part-glass) cut to the header plus the tab, so the two are a
+   single blurred surface (two separate blurs would break at the header's edge over dark content). Then it adds .shaped.
+   At the top of the page the tab shows every part; once the page scrolls it shrinks to the current one (.compact),
+   and clicking it unfolds the others (.open). A sideways swipe changes part and slides the page (.part-leave-*, .part-enter-*). */
 
 .part-bar {
-  position: sticky; top: 56px; z-index: 21; height: 52px; margin-top: 16px;
+  position: fixed; top: 56px; left: 0; right: 0; z-index: 21; height: 0;
   display: flex; justify-content: center; align-items: flex-start; pointer-events: none;
 }
-.part-bar + .hero { padding-top: clamp(16px, 4vw, 40px); }
+html:has(.part-bar.shaped) .site-header {   /* the bar draws the line, the shared glass replaces the header's own */
+  background: none; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent;
+}
+html:has(.part-bar), html:has(.part-bar) body { overscroll-behavior-x: none; }   /* sideways swipes change part, not history */
+.part-bar + .hero { padding-top: clamp(68px, 10vw, 104px); }
 html:has(.part-bar) { scroll-padding-top: 104px; }
 .part-bar ~ .lab .stage { top: 100px; max-height: calc(100vh - 116px); }
+
+.part-glass {
+  position: absolute; top: 0; left: 0; z-index: -1; width: 100%; height: 132px; pointer-events: none;
+  /* the header's glass, a little denser: the tab often hangs over dark blocks, which would tint it grey */
+  background: color-mix(in srgb, var(--page) 93%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px);
+}
+.part-shape { position: absolute; top: 0; left: 0; width: 100%; height: 64px; overflow: visible; pointer-events: none; }
+.part-shape .line { fill: none; stroke: var(--border); stroke-width: 1; }
+/* before layout.js has drawn the shape: a plain tab under the header's own line */
+.part-bar:not(.shaped) .seg3d { background: color-mix(in srgb, var(--page) 85%, transparent); border: 1px solid var(--border); border-top: 0; border-radius: 0 0 16px 16px; }
 
 .seg3d {
   --thumb-top: #ffffff; --thumb-bottom: #f4f4f1;
   --thumb-shadow: 0 1px 1px rgba(0, 0, 0, .06), 0 3px 10px rgba(0, 0, 0, .13), 0 0 0 .5px rgba(0, 0, 0, .07), inset 0 1px 0 rgba(255, 255, 255, .95);
   --liquid: cubic-bezier(.34, 1.36, .44, 1);   /* a little overshoot, like a drop settling */
-  --fillet: 14px;
-  --glass: color-mix(in srgb, var(--page) 85%, transparent);   /* the header's own glass */
-  position: relative; display: inline-flex; padding: 4px; margin-top: 8px; pointer-events: auto;
-  border-radius: 22px 22px 22px 22px;   /* real sizes, not 999px: an interpolated huge radius snaps square mid-way */
-  transform-origin: 50% 0;
-  /* the radius eases without overshoot: a bounce would push it below zero and square the corners for a frame */
-  transition: margin .6s var(--liquid), padding .6s var(--liquid), border-radius .5s cubic-bezier(.25, .8, .3, 1);
-}
-/* The surface lives on its own layer: an element that blurs its backdrop stops its children from blurring theirs,
-   so the switch, the glass and the two corners are siblings, each with its own blur. */
-.seg3d-glass {
-  position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  background: var(--surface-2); border: 1px solid var(--border); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .12);
-  transition: background-color .35s, border-color .35s, box-shadow .45s;
+  position: relative; display: inline-flex; padding: 3px 4px 4px; pointer-events: auto;
 }
 .seg3d a {
   position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  flex: 1 1 0; min-width: 120px; max-width: 200px; height: 34px; padding: 0 24px; overflow: hidden; white-space: nowrap;
-  border-radius: 999px; color: var(--ink-2); font: 600 0.92rem/1 var(--sans); text-decoration: none;
-  transition: color .3s, min-width .65s var(--liquid), max-width .65s var(--liquid), height .6s var(--liquid),
-    padding .65s var(--liquid), opacity .3s, font-size .6s var(--liquid);
+  flex: 1 1 0; min-width: 112px; max-width: 200px; height: 30px; padding: 0 22px; overflow: hidden; white-space: nowrap;
+  border-radius: 999px; color: var(--ink-2); font: 600 0.88rem/1 var(--sans); text-decoration: none;
+  transition: color .3s, min-width .6s var(--liquid), max-width .6s var(--liquid), height .5s var(--liquid),
+    padding .6s var(--liquid), opacity .3s, font-size .5s var(--liquid);
 }
 .seg3d a:hover { color: var(--ink); }
 .seg3d a[aria-current="page"] { color: var(--ink); }
 .seg3d a:focus-visible { outline-offset: -2px; border-radius: 999px; }
 .seg3d-thumb {
-  position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 999px;
+  position: absolute; top: 3px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px;
   background: linear-gradient(to bottom, var(--thumb-top), var(--thumb-bottom)); box-shadow: var(--thumb-shadow);
-  transition: transform .6s var(--liquid), width .6s var(--liquid), top .6s var(--liquid), opacity .35s;
+  transition: transform .55s var(--liquid), width .6s var(--liquid), opacity .3s;
 }
 .seg3d[data-active="2"] .seg3d-thumb { transform: translateX(100%); }
 
-/* the two concave corners that let the tab flow out of the header's bottom edge: glass cut to shape
-   (clip-path also clips the blur, which a transparent gradient would not) plus a thin line along the curve */
-.seg3d::before, .seg3d::after {
-  content: ""; position: absolute; top: -1px; width: var(--fillet); height: var(--fillet); pointer-events: none;
-  backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px);
-  opacity: 0; transform: scale(0); transition: transform .5s var(--liquid) .08s, opacity .2s .08s;
-}
-.seg3d::before {
-  right: calc(100% - 1px); transform-origin: 100% 0;
-  clip-path: path("M0,0 H14 V14 A14,14 0 0,0 0,0 Z");
-  background: radial-gradient(circle at 0 100%, transparent 13.4px, var(--border) 13.6px, var(--border) 14.6px, transparent 14.8px), var(--glass);
-}
-.seg3d::after {
-  left: calc(100% - 1px); transform-origin: 0 0;
-  clip-path: path("M14,0 H0 V14 A14,14 0 0,1 14,0 Z");
-  background: radial-gradient(circle at 100% 100%, transparent 13.4px, var(--border) 13.6px, var(--border) 14.6px, transparent 14.8px), var(--glass);
-}
-
-/* docked: one drop hanging from the header, showing only the current part */
-.part-bar.docked .seg3d {
-  margin-top: -1px; padding: 0 4px 4px; border-radius: 0 0 20px 20px;
-  animation: drop-merge .8s ease-in-out;
-}
-.part-bar.docked .seg3d-glass {
-  background: var(--glass); border-top-color: transparent; box-shadow: 0 12px 22px -12px rgba(0, 0, 0, .22);
-  backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px);
-}
-.part-bar.docked .seg3d::before, .part-bar.docked .seg3d::after { opacity: 1; transform: none; }
-.part-bar.docked .seg3d-thumb { top: 1px; bottom: 4px; left: 4px; }
-.part-bar.docked .seg3d a { height: 28px; font-size: 0.82rem; }
-.part-bar.docked:not(.open) .seg3d a:not([aria-current]) { min-width: 0; max-width: 0; padding: 0; opacity: 0; }
-.part-bar.docked:not(.open) .seg3d a[aria-current] { min-width: 96px; padding: 0 16px; cursor: pointer; }
-.part-bar.docked:not(.open) .seg3d-thumb { width: calc(100% - 8px); transform: none; opacity: 0; }
-.part-bar.docked.open .seg3d { animation: drop-swell .7s ease-in-out; }
-.part-bar.docked.open .seg3d-thumb { width: calc(50% - 4px); }
-.part-bar.docked:not(.open) .seg3d a[aria-current]::after {
+/* compact: only the current part, with a chevron to unfold the others */
+.part-bar.compact .seg3d a { height: 28px; font-size: 0.82rem; }
+.part-bar.compact .seg3d a:not([aria-current]) { min-width: 0; max-width: 0; padding: 0; opacity: 0; }
+.part-bar.compact .seg3d a[aria-current] { min-width: 96px; padding: 0 16px; cursor: pointer; }
+.part-bar.compact .seg3d-thumb { width: calc(100% - 8px); transform: none; opacity: 0; }
+.part-bar.compact .seg3d a[aria-current]::after,
+.part-bar.open .seg3d a[aria-current]::after {
   content: ""; width: 6px; height: 6px; margin-top: -3px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
-  transform: rotate(45deg); opacity: .55;
+  transform: rotate(45deg); opacity: .55; transition: transform .3s;
 }
-
-/* squash and stretch: the drop meets the header, flattens, then settles */
-@keyframes drop-merge {
-  0% { transform: scale(1, 1); }
-  35% { transform: scale(1.08, 0.86); }
-  60% { transform: scale(0.97, 1.06); }
-  80% { transform: scale(1.015, 0.985); }
-  100% { transform: none; }
-}
-@keyframes drop-swell {
-  0% { transform: scale(1, 1); }
-  40% { transform: scale(1.03, 0.94); }
-  70% { transform: scale(0.99, 1.03); }
-  100% { transform: none; }
-}
+.part-bar.open .seg3d a[aria-current]::after { transform: rotate(-135deg); margin-top: 3px; }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .seg3d { --thumb-top: #43433f; --thumb-bottom: #353532; --thumb-shadow: 0 1px 1px rgba(0, 0, 0, .4), 0 3px 10px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .1); }
 }
 :root[data-theme="dark"] .seg3d { --thumb-top: #43433f; --thumb-bottom: #353532; --thumb-shadow: 0 1px 1px rgba(0, 0, 0, .4), 0 3px 10px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .1); }
+
+/* changing part: the page slides out towards the swipe and the next part slides in from the other side */
+html.part-leave-left main > :not(.part-bar) { animation: part-out-left .3s cubic-bezier(.4, 0, .9, .6) both; }
+html.part-leave-right main > :not(.part-bar) { animation: part-out-right .3s cubic-bezier(.4, 0, .9, .6) both; }
+html.part-enter-from-right main > :not(.part-bar) { animation: part-in-right .45s cubic-bezier(.15, .8, .25, 1) both; }
+html.part-enter-from-left main > :not(.part-bar) { animation: part-in-left .45s cubic-bezier(.15, .8, .25, 1) both; }
+@keyframes part-out-left { to { transform: translateX(-64px); opacity: 0; } }
+@keyframes part-out-right { to { transform: translateX(64px); opacity: 0; } }
+@keyframes part-in-right { from { transform: translateX(64px); opacity: 0; } }
+@keyframes part-in-left { from { transform: translateX(-64px); opacity: 0; } }
 
 /* ---------- stage: a panel of current values that follows the reading (layout.js highlights it) ----------
    <div class="lab wrap"><div class="lab-main"> sections … </div><aside class="stage"> … </aside></div>
