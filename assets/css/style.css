@@ -433,8 +433,8 @@ details.data-table .table-wrap { margin-top: 6px; max-height: 260px; overflow: a
    At the top of the page the tab shows every part; once the page scrolls it shrinks to the current one (.compact),
    and clicking it unfolds the others (.open). A sideways swipe changes part and slides the page (.part-leave-*, .part-enter-*). */
 
-.part-bar {
-  position: fixed; top: 56px; left: 0; right: 0; z-index: 21; height: 0;
+.part-bar {   /* sticky like the header (not fixed), so a rubber-band overscroll pulls the header and the tab together */
+  position: sticky; top: 56px; z-index: 21; height: 0; margin-top: -1px;   /* -1px: the header's border, so it sits at 56px at the top too */
   display: flex; justify-content: center; align-items: flex-start; pointer-events: none;
 }
 html:has(.part-bar.shaped) .site-header {   /* the bar draws the line, the shared glass replaces the header's own */
