@@ -1,0 +1,25 @@
+/* Homework 4-specific components: the step-by-step derivation and the code block. */
+
+.derivation {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.05em;
+  padding: 0.8em 1em;
+  margin: 0 0 1em;
+  border-left: 3px solid var(--border-strong);
+  overflow-x: auto;
+}
+.derivation > div { white-space: nowrap; line-height: 1.9; }
+.derivation > div + div { padding-left: 4.6em; }
+.derivation .why { margin-left: 1.5em; font-size: 0.85em; color: var(--muted); font-family: var(--sans, inherit); }
+
+pre .cm { color: var(--muted); }
+
+.prose h3 { font-size: 1rem; }
+
+/* exercise boundaries: a heavy rule and the exercise title open each exercise; its first section needs no rule of its own */
+.exercise-head { border-top: 3px solid var(--ink); padding-top: clamp(28px, 5vw, 44px); margin-top: clamp(16px, 3vw, 28px); }
+.exercise-head:first-child { margin-top: 0; }
+.exercise-head p { margin: 0; }
+.exercise-head .ex-label { font: 600 0.8rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.exercise-head .ex-title { font-size: clamp(1.6rem, 3.2vw, 2.1rem); font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; margin-top: 8px; }
+.exercise-head + section.block { border-top: 0; padding-top: clamp(20px, 3vw, 28px); }

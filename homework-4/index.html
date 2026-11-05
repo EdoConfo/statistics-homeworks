@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homework 4 · Statistics Homeworks</title>
+  <meta name="description" content="Welford's recurrence formulas for the sum of squares and the variance, and the sampling mean and variance of m hackers attempting n systems.">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/css/style.css?v=8">
+  <link rel="stylesheet" href="../homework-3/hw3.css">
+  <link rel="stylesheet" href="hw4.css">
+  <script src="../assets/js/theme.js?v=8"></script>
+  <script src="../assets/js/layout.js?v=8"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <site-header homework="4"></site-header>
+
+  <main>
+    <div class="part-bar">
+      <nav class="seg3d" aria-label="Homework 4 exercises" data-active="1">
+        <span class="seg3d-thumb" aria-hidden="true"></span>
+        <a href="#ex-1" aria-current="page">Ex. 1</a>
+        <a href="#ex-2">Ex. 2</a>
+      </nav>
+    </div>
+
+    <div class="wrap hero">
+      <h1>Welford's Recurrences and Sampling Mean and Variance</h1>
+      <p class="lede">Running mean, sum of squares and variance updated one score at a time, then used on the scores of
+        <var>m</var> hackers attempting <var>n</var> systems.</p>
+    </div>
+
+    <div class="lab wrap">
+    <div class="lab-main">
+
+    <!-- Ex. 1 ========================================================== -->
+    <div class="exercise-head" id="ex-1">
+      <p class="ex-label">Exercise 1</p>
+      <p class="ex-title">Welford's Recurrence Formulas</p>
+    </div>
+
+    <!-- 01 ------------------------------------------------------------ -->
+    <section class="block" id="welford" data-stage="welford">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">01</span><h2>Derivation</h2></div>
+        <p class="section-sub">After <var>k</var> scores <span class="math">x₁, …, xₖ</span> let
+          <span class="math">Mₖ = (1/k) ∑ xᵢ</span> be the mean and <span class="math">Sₖ = ∑ (xᵢ − Mₖ)²</span> the sum of squares, with
+          <span class="math">M₀ = S₀ = 0</span>.</p>
+
+        <h3>Mean (Knuth)</h3>
+        <div class="math-block">kMₖ = (k − 1)Mₖ₋₁ + xₖ   ⇒   Mₖ = Mₖ₋₁ + (xₖ − Mₖ₋₁) / k</div>
+
+        <h3>Sum of squares</h3>
+        <p>Same approach: write <span class="math">Sₖ = ∑ xᵢ² − kMₖ²</span> and take the difference of two consecutive steps.</p>
+        <div class="derivation">
+          <div>Sₖ − Sₖ₋₁ = xₖ² − kMₖ² + (k − 1)Mₖ₋₁²</div>
+          <div>= xₖ² − kMₖ² + (kMₖ − xₖ)Mₖ₋₁<span class="why">using (k − 1)Mₖ₋₁ = kMₖ − xₖ</span></div>
+          <div>= xₖ(xₖ − Mₖ₋₁) − kMₖ(Mₖ − Mₖ₋₁)</div>
+          <div>= xₖ(xₖ − Mₖ₋₁) − Mₖ(xₖ − Mₖ₋₁)<span class="why">using k(Mₖ − Mₖ₋₁) = xₖ − Mₖ₋₁</span></div>
+        </div>
+        <div class="math-block">Sₖ = Sₖ₋₁ + (xₖ − Mₖ₋₁)(xₖ − Mₖ)</div>
+
+        <h3>Variance</h3>
+        <p>Since <span class="math">xₖ − Mₖ = (k − 1)(xₖ − Mₖ₋₁)/k</span>, the step is also
+          <span class="math">Sₖ = Sₖ₋₁ + (k − 1)(xₖ − Mₖ₋₁)²/k</span>. Dividing by <span class="math">k − 1</span> gives the sample variance
+          <span class="math">sₖ² = Sₖ/(k − 1)</span>, for <span class="math">k ≥ 2</span>:</p>
+        <div class="math-block">sₖ² = ((k − 2)/(k − 1)) sₖ₋₁² + (xₖ − Mₖ₋₁)² / k</div>
+      </div>
+    </section>
+
+    <!-- 02 ------------------------------------------------------------ -->
+    <section class="block" id="code" data-stage="welford">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">02</span><h2>Code</h2></div>
+        <pre><code>function welford(scores) {
+  let k = 0, M = 0, S = 0;
+  for (const x of scores) {
+    const d = x - M;         <span class="cm">// xₖ − Mₖ₋₁</span>
+    M += d / ++k;            <span class="cm">// Mₖ</span>
+    S += d * (x - M);        <span class="cm">// Sₖ</span>
+  }
+  return { mean: M, ss: S, variance: S / (k - 1) };
+}</code></pre>
+
+        <p class="small muted">For example, the first scores of one hacker, step by step. The last column is the variance recomputed from scratch.</p>
+        <div class="table-wrap">
+          <table id="w-table">
+            <thead><tr><th class="num">k</th><th class="num">xₖ</th><th class="num">Mₖ</th><th class="num">Sₖ</th><th class="num">sₖ²</th><th class="num">sₖ², two-pass</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="controls mt-2 mb-0">
+          <button class="btn" type="button" id="w-run">New scores</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ex. 2 ========================================================== -->
+    <div class="exercise-head" id="ex-2">
+      <p class="ex-label">Exercise 2</p>
+      <p class="ex-title">Sampling Mean and Variance</p>
+    </div>
+
+    <!-- 03 ------------------------------------------------------------ -->
+    <section class="block" id="scores" data-stage="dist">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">03</span><h2>The score of an attempt</h2></div>
+        <p class="section-sub">Each penetration attempt is made of 10 independent steps, each successful with probability
+          <span class="math">p = 0.3</span>, as in the Bernoulli model of the previous homework. The score is the number of successful steps,
+          so <span class="math">X ~ Binomial(10, 0.3)</span> on <span class="math">{0, …, 10}</span>.</p>
+        <div class="math-block">μ = 10p = 3,   σ² = 10p(1 − p) = 2.1</div>
+        <p class="chart-title">P(X = x)</p>
+        <div id="d-pmf"></div>
+      </div>
+    </section>
+
+    <!-- 04 ------------------------------------------------------------ -->
+    <section class="block" id="hackers" data-stage="exp">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">04</span><h2>m hackers, n systems</h2></div>
+        <p class="section-sub">Hacker <var>j</var> gets one score per system, a trajectory <span class="math">x₁⁽ʲ⁾, …, xₙ⁽ʲ⁾</span>.
+          Welford's recurrences give its sampling mean <span class="math">x̄⁽ʲ⁾ = Mₙ</span> and sampling variance <span class="math">s²⁽ʲ⁾ = Sₙ/(n − 1)</span>.
+          Then both are averaged over the <var>m</var> hackers.</p>
+
+        <div class="controls">
+          <label class="field"><span>Systems n</span><select id="e-n"></select></label>
+          <label class="field"><span>Hackers m</span><select id="e-m"></select></label>
+          <button class="btn primary" type="button" id="e-run">New simulation</button>
+        </div>
+        <div class="tiles" id="e-tiles"></div>
+
+        <div class="grid grid-2">
+          <div><p class="chart-title">Running mean <span class="math">Mₖ</span></p><p class="chart-sub" id="e-mean-sub"></p><div id="e-mean"></div></div>
+          <div><p class="chart-title">Running variance <span class="math">sₖ²</span></p><p class="chart-sub" id="e-var-sub"></p><div id="e-var"></div></div>
+        </div>
+
+        <div class="grid grid-2 mt-3">
+          <div class="prose">
+            <h3>Conclusions</h3>
+            <ul>
+              <li>The average of the sampling means is close to <span class="math">μ = 3</span>: <span class="math">E[x̄] = μ</span>,
+                the sampling mean is an unbiased estimator of <span class="math">μ</span>.</li>
+              <li>The average of the sampling variances is close to <span class="math">σ² = 2.1</span>: dividing by <span class="math">n − 1</span>
+                makes <span class="math">E[s²] = σ²</span>. Dividing by <var>n</var> would give <span class="math">(n − 1)σ²/n</span>, too small.</li>
+              <li>Each single hacker can be far from <span class="math">μ</span> and <span class="math">σ²</span>; only the average over many hackers settles on them.</li>
+            </ul>
+          </div>
+          <div class="prose">
+            <h3>Why it matters in inference</h3>
+            <p><span class="math">μ</span> and <span class="math">σ²</span> are usually unknown and only one sample is observed. Because
+              <span class="math">x̄</span> and <span class="math">s²</span> are unbiased, they estimate them with no systematic error, and
+              <span class="math">s²</span> also measures how precise <span class="math">x̄</span> is, through <span class="math">Var(x̄) = σ²/n</span>.
+              Confidence intervals and tests are built on this.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 ------------------------------------------------------------ -->
+    <section class="block" id="grow" data-stage="grow">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">05</span><h2>Increasing n</h2></div>
+        <p class="section-sub">The experiment repeated for <span class="math">n = 2, 5, 10, …, 1 000</span>. Dots: average over the hackers.
+          Band: average ± 2 standard deviations across hackers. Dashed: <span class="math">μ</span> and <span class="math">σ²</span>.</p>
+
+        <div class="controls">
+          <label class="field"><span>Hackers m</span><select id="g-m"></select></label>
+          <button class="btn" type="button" id="g-run">Run again</button>
+          <span class="small muted" id="g-status"></span>
+        </div>
+        <div class="grid grid-2">
+          <div><p class="chart-title">Sampling means</p><div id="g-mean"></div></div>
+          <div><p class="chart-title">Sampling variances</p><div id="g-var"></div></div>
+        </div>
+        <div class="table-wrap mt-2">
+          <table id="g-table">
+            <thead><tr><th class="num">n</th><th class="num">Average of x̄</th><th class="num">SD of x̄</th><th class="num">σ/√n</th>
+              <th class="num">Average of s²</th><th class="num">SD of s²</th><th class="num">SD of s², theory</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="prose mt-2">
+          <ul>
+            <li>The averages stay on <span class="math">μ</span> and <span class="math">σ²</span> for every <var>n</var>: unbiasedness does not depend on <var>n</var>.</li>
+            <li>The spread shrinks as <var>n</var> grows. The standard deviation of <span class="math">x̄</span> is <span class="math">σ/√n</span>, and that of
+              <span class="math">s²</span> is <span class="math">√((μ₄ − σ⁴(n − 3)/(n − 1))/n)</span>, also of order <span class="math">1/√n</span>
+              (<span class="math">μ₄ = E[(X − μ)⁴]</span>): a hundred times more systems make each hacker's estimates ten times more precise.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    </div>
+
+    <aside class="stage" aria-label="Current values">
+      <p class="stage-title">Current values</p>
+      <div class="stage-block">
+        <p class="stage-group">Welford</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="welford"><span class="stage-label">Last step</span><span class="stage-note" data-stage-value="w-k"></span><code class="stage-value" data-stage-value="w">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+      <div class="stage-block">
+        <p class="stage-group">Score</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="dist exp grow"><span class="stage-label">X</span><code class="stage-value">Binomial(10, 0.3)</code></li>
+            <li class="stage-node" data-for="dist exp grow"><span class="stage-label">μ and σ²</span><code class="stage-value">μ = 3 · σ² = 2.1</code></li>
+          </ol>
+        </div></div>
+      </div>
+      <div class="stage-block">
+        <p class="stage-group">Experiment</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="exp"><span class="stage-label">Simulation</span><code class="stage-value" data-stage-value="e-sim">–</code></li>
+            <li class="stage-node gap" data-for="exp"><span class="stage-label">Average of x̄</span><span class="stage-note">μ = 3</span><code class="stage-value" data-stage-value="e-mean">–</code></li>
+            <li class="stage-node" data-for="exp"><span class="stage-label">Average of s²</span><span class="stage-note">σ² = 2.1</span><code class="stage-value" data-stage-value="e-var">–</code></li>
+            <li class="stage-node gap" data-for="grow"><span class="stage-label">Spread across hackers</span><span class="stage-note" data-stage-value="g-note"></span><code class="stage-value" data-stage-value="g">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+    </aside>
+    </div>
+  </main>
+
+  <site-footer></site-footer>
+  <template id="assignment">
+    <h3>HMWK 4</h3>
+    <h4>Ex. 1 – Welford's Recurrence Formulas</h4>
+    <p>Derive Welford's recurrence formulas for the sum of squares (SS) and the variance, following the same approach as Knuth's recurrence formula for the mean.</p>
+    <p>Write the corresponding code. The core logic should require only about 3 lines.</p>
+    <h4>Ex. 2 – Sampling Mean and Variance</h4>
+    <p>Extend the previous homework by assigning each penetration attempt a score between 0 and 10, drawn from a fixed probability distribution of your choice. Let the theoretical mean and variance of this distribution be μ and σ², respectively.</p>
+    <p>Assume there are m hackers, each attempting to penetrate n systems. Each hacker receives one score for each system, resulting in a trajectory of n scores.</p>
+    <p>For each hacker, use Welford's recurrence formulas to compute the sampling mean and sampling variance of their n scores.</p>
+    <p>Across the m hackers, compute the average of the sampling means and the average of the sampling variances. Compare these two averages with the theoretical mean μ and variance σ², respectively.</p>
+    <p>What conclusions can you draw from these comparisons? Why are these results useful in inferential statistics? Repeat the experiment for different values of n. How does increasing the number of systems attempted by each hacker affect the variability of the sampling means and sampling variances?</p>
+  </template>
+</body>
+</html>

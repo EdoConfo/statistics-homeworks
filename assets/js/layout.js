@@ -10,7 +10,7 @@
   var REPO = 'https://github.com/EdoConfo/statistics-homeworks';
   var COURSE = 'Statistics · Cybersecurity 2026–2027';
   var AUTHOR = 'Edoardo Conforti · 2151055';
-  var HOMEWORKS = [{ hw: 1, path: 'homework-1/part-1/' }, { hw: 2, path: 'homework-2/' }, { hw: 3, path: 'homework-3/' }];   // reading order, each with its first page
+  var HOMEWORKS = [{ hw: 1, path: 'homework-1/part-1/' }, { hw: 2, path: 'homework-2/' }, { hw: 3, path: 'homework-3/' }, { hw: 4, path: 'homework-4/' }];   // reading order, each with its first page
   var GITHUB_ICON = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>';
 
   var CHEVRON_LEFT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
@@ -129,6 +129,7 @@
   // path, and the header and the tab share one glass surface cut to the same outline, so the blur flows from one into
   // the other and the tab grows out of the header without a seam, whatever lies underneath.
   // A sideways swipe (trackpad or touch) also changes part: fingers to the left for the next part, to the right for the previous one.
+  // When the tab's links are anchors (#id) the parts are sections of the same page: the tab scrolls to them and follows the scroll.
 
   // a part reached by switching slides in from the side it came from (set before the page is painted)
   try {
@@ -142,7 +143,7 @@
   var NS = 'http://www.w3.org/2000/svg';
   var FILLET = 12;     // radius of the curves where the header line bends into the tab
   var CORNER = 16;     // radius of the tab's bottom corners
-  var part = null;     // { bar, seg, links, open, openedAt }
+  var part = null;     // { bar, seg, links, open, openedAt, inPage, heldUntil }
 
   function onParsed(fn) {
     // readyState turns 'interactive' when parsing ends, before deferred and module scripts run (they may wait on the network)
@@ -212,9 +213,42 @@
     if (cur) { if (scrolled) cur.setAttribute('aria-expanded', String(!compact)); else cur.removeAttribute('aria-expanded'); }
   }
 
+  function markCurrent(i) {
+    part.seg.setAttribute('data-active', String(i + 1));
+    part.links.forEach(function (l, j) {
+      l.removeAttribute('aria-expanded');
+      if (j === i) l.setAttribute('aria-current', 'page'); else l.removeAttribute('aria-current');
+    });
+    layoutPart();
+  }
+
+  /** In-page parts: scroll to the part's anchor; the thumb moves at once and the scroll does not move it back meanwhile. */
+  function scrollToPart(i) {
+    var target = document.getElementById(part.links[i].getAttribute('href').slice(1));
+    if (!target) return;
+    part.open = false;
+    part.heldUntil = Date.now() + 1000;
+    markCurrent(i);
+    var smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    target.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+    history.replaceState(null, '', '#' + target.id);
+  }
+
+  /** In-page parts: the current part is the last one whose start is above the upper third of the window. */
+  function followScroll() {
+    if (Date.now() < part.heldUntil) return;
+    var line = window.innerHeight / 3, here = 0;
+    part.links.forEach(function (l, i) {
+      var el = document.getElementById(l.getAttribute('href').slice(1));
+      if (el && el.getBoundingClientRect().top <= line) here = i;
+    });
+    if (part.seg.getAttribute('data-active') !== String(here + 1)) markCurrent(here);
+  }
+
   /** Slide the thumb and the page towards the chosen part, then follow its link. */
   function switchTo(a) {
     var i = part.links.indexOf(a), from = part.links.findIndex(function (l) { return l.getAttribute('aria-current') === 'page'; });
+    if (part.inPage) { if (i >= 0) scrollToPart(i); return; }
     if (i < 0 || i === from) return;
     var forward = i > from;
     part.seg.setAttribute('data-active', String(i + 1));
@@ -251,9 +285,14 @@
     var bar = document.querySelector('.part-bar');
     if (!bar) return;
     var seg = bar.querySelector('.seg3d');
-    part = { bar: bar, seg: seg, links: Array.prototype.slice.call(seg.querySelectorAll('a')), open: false, openedAt: 0 };
+    var links = Array.prototype.slice.call(seg.querySelectorAll('a'));
+    part = {
+      bar: bar, seg: seg, links: links, open: false, openedAt: 0, heldUntil: 0,
+      inPage: links.every(function (l) { return (l.getAttribute('href') || '').charAt(0) === '#'; }),
+    };
     shape(bar, seg);
     layoutPart();
+    if (part.inPage) followScroll();
 
     var ticking = false;
     window.addEventListener('scroll', function () {
@@ -264,6 +303,7 @@
         // scrolling on after opening the tab folds it again
         if (part.open && Math.abs(window.scrollY - part.openedAt) > 80) part.open = false;
         layoutPart();
+        if (part.inPage) followScroll();
       });
     }, { passive: true });
 
@@ -306,7 +346,8 @@
     }
     if (a.getAttribute('aria-current') === 'page') {
       e.preventDefault();
-      if (window.scrollY > 12) setOpen(!part.open);
+      if (part.inPage && (part.open || window.scrollY <= 12)) scrollToPart(part.links.indexOf(a));   // unfolded: go to its start
+      else if (window.scrollY > 12) setOpen(!part.open);
       return;
     }
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;   // new-tab clicks are left alone
@@ -320,7 +361,7 @@
 
   // coming back with the browser's back button restores the page from cache: undo the exit and put the thumb back
   window.addEventListener('pageshow', function (e) {
-    if (!e.persisted || !part) return;
+    if (!e.persisted || !part || part.inPage) return;
     document.documentElement.classList.remove('part-leave-left', 'part-leave-right', 'part-enter-from-left', 'part-enter-from-right');
     var here = part.links.findIndex(function (l) { return l.href === window.location.href.split('#')[0]; });
     if (here < 0) return;
