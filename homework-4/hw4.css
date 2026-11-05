@@ -16,9 +16,8 @@ pre .cm { color: var(--muted); }
 
 .prose h3 { font-size: 1rem; }
 
-/* exercise boundaries: a heavy rule and the exercise title open each exercise; its first section needs no rule of its own */
-.exercise-head { border-top: 3px solid var(--ink); padding-top: clamp(28px, 5vw, 44px); margin-top: clamp(16px, 3vw, 28px); }
-.exercise-head:first-child { margin-top: 0; }
+/* exercise boundaries: the same rule as between sections, then the exercise title; its first section needs no rule of its own */
+.exercise-head { border-top: 1px solid var(--border); padding-top: clamp(32px, 6vw, 56px); }
 .exercise-head p { margin: 0; }
 .exercise-head .ex-label { font: 600 0.8rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .exercise-head .ex-title { font-size: clamp(1.6rem, 3.2vw, 2.1rem); font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; margin-top: 8px; }
