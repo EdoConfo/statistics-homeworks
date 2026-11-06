@@ -1,0 +1,20 @@
+/* Homework 5-specific components: the strips-and-slabs pictures and code blocks. */
+
+.slices svg { display: block; width: 100%; height: auto; }
+.slices .box { fill: var(--series-1); fill-opacity: 0.28; stroke: var(--series-1); stroke-width: 0.8; }
+.slices .slab { fill: var(--series-2); fill-opacity: 0.3; stroke: var(--series-2); stroke-width: 0.8; }
+.slices .pre { stroke: var(--series-2); stroke-width: 3; stroke-linecap: butt; }
+.slices .curve { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
+.slices .axis { stroke: var(--axis, var(--border-strong)); stroke-width: 1; }
+.slices text { font: 500 11px var(--mono); fill: var(--muted); }
+
+.prose h3 { font-size: 1rem; }
+pre .cm { color: var(--muted); }
+td.good { color: var(--series-3, inherit); }
+input[type="range"] { width: 200px; }
+
+/* callouts here have no icon: give the text the whole width (the shared grid keeps a 22px icon column) */
+.callout:not(:has(> svg)) { grid-template-columns: minmax(0, 1fr); }
+
+/* the first column names a function or a method: keep it on one line, the table scrolls sideways if needed */
+#acc-table td:first-child, #cost-table td:first-child, #calc-table td:first-child, #speed-table td:first-child { white-space: nowrap; }

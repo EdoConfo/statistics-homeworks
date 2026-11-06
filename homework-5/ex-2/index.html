@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homework 5 · Ex. 2 · Statistics Homeworks</title>
+  <meta name="description" content="The standard normal CDF computed with quadrature, power series, a continued fraction and the error function, checked against reference values, with Liouville's theorem on why no elementary formula exists.">
+  <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../assets/css/style.css?v=10">
+  <link rel="stylesheet" href="../../homework-3/hw3.css">
+  <link rel="stylesheet" href="../hw5.css?v=3">
+  <script src="../../assets/js/theme.js?v=10"></script>
+  <script src="../../assets/js/layout.js?v=10"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <site-header homework="5"></site-header>
+
+  <main>
+    <div class="part-bar">
+      <nav class="seg3d" aria-label="Homework 5 exercises" data-active="2">
+        <span class="seg3d-thumb" aria-hidden="true"></span>
+        <a href="../">Ex. 1</a>
+        <a href="../ex-2/" aria-current="page">Ex. 2</a>
+      </nav>
+    </div>
+
+    <div class="wrap hero">
+      <h1>Numerical Computation of the Normal CDF</h1>
+      <p class="lede">Φ(x) has no formula in elementary functions. Why that is, what the error function adds, and how to get
+        Φ(x) to full double precision quickly.</p>
+    </div>
+
+    <div class="lab wrap">
+    <div class="lab-main">
+
+    <!-- 01 ------------------------------------------------------------ -->
+    <section class="block" id="cdf" data-stage="calc">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">01</span><h2>The function to compute</h2></div>
+        <div class="math-block">Φ(x) = P(Z ≤ x) = ∫<sub>−∞</sub><sup>x</sup> φ(t) dt,   φ(t) = e<sup>−t²/2</sup> / √(2π)</div>
+        <div class="prose">
+          <p><span class="math">φ</span> integrates to 1: squaring <span class="math">∫₀^∞ e<sup>−x²</sup> dx</span> gives a double integral that polar coordinates turn into
+            <span class="math">π/4</span>. By symmetry <span class="math">Φ(0) = 1/2</span> and <span class="math">Φ(−x) = 1 − Φ(x)</span>, and any
+            <span class="math">N(μ, σ²)</span> reduces to it: <span class="math">P(X ≤ x) = Φ((x − μ)/σ)</span>.</p>
+        </div>
+
+        <div class="controls mt-2">
+          <label class="field"><span>x</span><input type="number" id="calc-x" value="1.96" step="0.01" min="-38" max="38"></label>
+        </div>
+        <div class="tiles" id="calc-tiles"></div>
+        <div class="table-wrap">
+          <table id="calc-table">
+            <thead><tr><th>Method</th><th class="num">Φ(x)</th><th class="num">Difference from the final method</th><th class="num">Work</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 ------------------------------------------------------------ -->
+    <section class="block" id="liouville" data-stage="theory">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">02</span><h2>Why there is no elementary formula</h2></div>
+        <p class="section-sub">Elementary functions: those built from <var>x</var> and constants with <span class="math">+, −, ×, ÷</span>, roots, <span class="math">exp</span>,
+          <span class="math">log</span> (and so the trigonometric functions and their inverses), composed finitely many times.</p>
+        <div class="prose">
+          <h3>Liouville's theorem</h3>
+          <p>Let <span class="math">f</span> and <span class="math">g</span> be rational functions, <span class="math">g</span> not constant. If
+            <span class="math">∫ f(x) e<sup>g(x)</sup> dx</span> is elementary, then it equals <span class="math">R(x) e<sup>g(x)</sup></span> for some rational function
+            <span class="math">R</span> with</p>
+          <div class="math-block">f = R′ + R g′</div>
+          <h3>Applied to φ</h3>
+          <p>Here <span class="math">f = 1</span> and <span class="math">g = −x²/2</span>, so an elementary antiderivative needs a rational <span class="math">R</span> with</p>
+          <div class="math-block">R′(x) − x R(x) = 1</div>
+          <ul>
+            <li><strong><var>R</var> a polynomial of degree <var>d</var></strong>: <span class="math">xR</span> has degree <span class="math">d + 1</span> and
+              <span class="math">R′</span> degree <span class="math">d − 1</span>, so the left side has degree <span class="math">d + 1 ≥ 1</span> and cannot be the constant 1.
+              <span class="math">R = 0</span> gives 0.</li>
+            <li><strong><var>R</var> with a pole</strong> of order <span class="math">k ≥ 1</span> at some point <var>c</var>: <span class="math">R′</span> has a pole of order
+              <span class="math">k + 1</span> there and <span class="math">xR</span> one of order at most <var>k</var>. Nothing cancels the pole of order
+              <span class="math">k + 1</span>, but the right side has no poles.</li>
+          </ul>
+          <p>No <span class="math">R</span> exists, so <span class="math">∫ e<sup>−x²/2</sup> dx</span>, and with it <span class="math">Φ</span>, is not elementary.
+            It does have an antiderivative (every continuous function does), and it can be written as a convergent series, as in section 04.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 ------------------------------------------------------------ -->
+    <section class="block" id="erf" data-stage="theory">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">03</span><h2>The error function</h2></div>
+        <div class="math-block">erf(z) = (2/√π) ∫₀<sup>z</sup> e<sup>−u²</sup> du    ⇒    Φ(x) = ½ (1 + erf(x/√2))</div>
+        <div class="prose">
+          <p>With <span class="math">t = √2 u</span>, <span class="math">∫₀<sup>x</sup> φ(t) dt = ½ erf(x/√2)</span>; add <span class="math">Φ(0) = ½</span>.</p>
+          <p>The formula is exact: Liouville's theorem shows that no elementary expression exists, so a new function is given a name and its properties
+            (odd, increasing, <span class="math">erf(∞) = 1</span>, derivative <span class="math">2e<sup>−z²</sup>/√π</span>, series, asymptotics) are studied once and reused.
+            Φ is then a closed form in terms of erf, as <span class="math">sin</span> is a closed form for the ratio of two sides.</p>
+          <p>A name does not give numbers. To print <span class="math">erf(1.3)</span> to 16 digits someone has to evaluate an integral, a series or an approximation,
+            exactly as libraries do for <span class="math">exp</span> and <span class="math">sin</span>. The difference is that <span class="math">exp</span> and
+            <span class="math">sin</span> are built into every language; <code>erf</code> is not in JavaScript's <code>Math</code>, so here it has to be written.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 ------------------------------------------------------------ -->
+    <section class="block" id="methods" data-stage="calc">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">04</span><h2>Numerical approaches</h2></div>
+        <p class="section-sub">All start from <span class="math">Φ(x) = ½ + ∫₀<sup>x</sup> φ(t) dt</span> or from erf.</p>
+        <div class="grid grid-2">
+          <div class="prose">
+            <h3>1. Trapezoidal rule</h3>
+            <div class="math-block">∫₀<sup>x</sup> φ ≈ h [½φ(0) + φ(h) + … + φ((n−1)h) + ½φ(x)],  h = x/n</div>
+            <p>Error of order <span class="math">h²</span>.</p>
+          </div>
+          <div class="prose">
+            <h3>2. Simpson's rule</h3>
+            <div class="math-block">∫₀<sup>x</sup> φ ≈ (h/3) [φ(0) + 4φ(h) + 2φ(2h) + … + 4φ((n−1)h) + φ(x)]</div>
+            <p>Error of order <span class="math">h⁴</span>.</p>
+          </div>
+          <div class="prose">
+            <h3>3. Power series</h3>
+            <div class="math-block">Φ(x) = ½ + (1/√(2π)) ∑ₖ (−1)ᵏ x<sup>2k+1</sup> / (2ᵏ (2k + 1) k!)</div>
+            <p><span class="math">e<sup>−t²/2</sup></span> expanded and integrated term by term. Converges for every <var>x</var>, but the terms alternate in sign and grow
+              to about <span class="math">e<sup>x²/2</sup></span> before shrinking: for large <span class="math">|x|</span> the cancellation destroys every digit.</p>
+          </div>
+          <div class="prose">
+            <h3>4. Series with positive terms</h3>
+            <div class="math-block">Φ(x) = ½ + φ(x) (x + x³/3 + x⁵/(3·5) + x⁷/(3·5·7) + …)</div>
+            <p>The same function with <span class="math">e<sup>−x²/2</sup></span> taken out of the sum (differentiate both sides to check). All terms have the same sign: no
+              cancellation.</p>
+          </div>
+          <div class="prose">
+            <h3>5. Continued fraction for the tail</h3>
+            <div class="math-block">1 − Φ(x) = φ(x) / (x + 1/(x + 2/(x + 3/(x + …))))   (x &gt; 0)</div>
+            <p>Laplace's fraction. Converges fast for large <var>x</var> (about 30 levels at <span class="math">x = 4</span>), slowly near 0. It gives the tail
+              probability directly, without computing <span class="math">1 − Φ</span> as a difference.</p>
+          </div>
+          <div class="prose">
+            <h3>6. Rational approximation of erf</h3>
+            <div class="math-block">erf(z) ≈ 1 − (a₁t + a₂t² + a₃t³ + a₄t⁴ + a₅t⁵) e<sup>−z²</sup>,  t = 1/(1 + 0.3275911 z)</div>
+            <p>Abramowitz &amp; Stegun 7.1.26, with fitted constants <span class="math">aᵢ</span>. One exponential and a polynomial, absolute error below
+              <span class="math">1.5 × 10⁻⁷</span>. Then <span class="math">Φ(x) = ½(1 + erf(x/√2))</span>.</p>
+          </div>
+        </div>
+        <div class="callout insight"><p><strong>Final method.</strong> Series 4 for <span class="math">|x| &lt; 2.5</span>, continued fraction 5 for <span class="math">|x| ≥ 2.5</span>;
+          for <span class="math">x ≤ −2.5</span> the fraction gives <span class="math">Φ(x) = 1 − Φ(|x|)</span> directly, so even
+          <span class="math">Φ(−8) ≈ 6 × 10⁻¹⁶</span> keeps all its significant digits. At most about 70 terms, no tables, no step size to choose.</p></div>
+      </div>
+    </section>
+
+    <!-- 05 ------------------------------------------------------------ -->
+    <section class="block" id="accuracy" data-stage="acc">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">05</span><h2>Accuracy against reference values</h2></div>
+        <p class="section-sub">References: for <span class="math">x = ±0.5, ±1, …, ±4</span> the
+          <a href="https://en.wikipedia.org/wiki/68%E2%80%9395%E2%80%9399.7_rule#Table_of_numerical_values" target="_blank" rel="noopener">table of numerical values</a>
+          of the 68–95–99.7 rule on Wikipedia, which gives <span class="math">p = P(|Z| &lt; k)</span> to 15 decimals, so
+          <span class="math">Φ(±k) = (1 ± p)/2</span>. For the other points, and the deep tail where 15 decimals are not enough, <code>mpmath.ncdf</code> at 30 significant digits.</p>
+        <div class="table-wrap">
+          <table id="ref-table">
+            <thead><tr><th class="num">x</th><th class="num">Reference Φ(x)</th><th>Source</th><th class="num">Final method</th><th class="num">Relative error</th>
+              <th class="num">Simpson, n = 100</th><th class="num">Series 3</th><th class="num">A&amp;S erf</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="small muted">The last three columns are relative errors. Relative errors around <span class="math">10⁻¹²</span> at <span class="math">x = −3.5, −4</span>
+          come from the reference: 15 decimals of <var>p</var> fix <span class="math">Φ(−4) ≈ 3 × 10⁻⁵</span> only to about 11 significant digits.</p>
+
+        <p class="chart-title mt-3">Relative error on −8 ≤ x ≤ 8</p>
+        <p class="chart-sub">Against <code>mpmath.ncdf</code> every 0.25. Errors below 10⁻¹⁷ (exact in double precision) are drawn at the bottom.</p>
+        <div id="err-chart"></div>
+        <div class="prose mt-2">
+          <ul>
+            <li>The final method stays below <span class="math">10⁻¹⁴</span> everywhere, tails included, and is often exact to the last bit. Its largest errors sit just inside <span class="math">x = −2.5</span>, where series 4 still subtracts.</li>
+            <li>The A&amp;S formula has a fixed absolute error near <span class="math">10⁻⁷</span>: fine for <span class="math">x &gt; 0</span>, useless for small left-tail probabilities.</li>
+            <li>Quadrature on <span class="math">[0, x]</span> computes <span class="math">Φ(x) = ½ − (…)</span> for negative <var>x</var>: a difference of nearly equal numbers, so its relative
+              error grows in the tail. The alternating series breaks down beyond <span class="math">|x| ≈ 5</span>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 ------------------------------------------------------------ -->
+    <section class="block" id="efficiency" data-stage="eff">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">06</span><h2>Efficiency</h2></div>
+        <div class="grid grid-2">
+          <div>
+            <p class="chart-title">Quadrature error against n, at x = 2</p>
+            <p class="chart-sub">Log–log: slopes −2 (trapezoid) and −4 (Simpson).</p>
+            <div id="quad-chart"></div>
+          </div>
+          <div>
+            <p class="chart-title">Time per evaluation</p>
+            <p class="chart-sub" id="speed-sub">Measured in this browser on x in [−8, 8]. Series 4 alone fails in the left tail (½ minus a nearly equal number); the continued fraction alone is slow near 0. Together they cover each other.</p>
+            <div class="table-wrap">
+              <table id="speed-table">
+                <thead><tr><th>Method</th><th class="num">ns per Φ(x)</th><th class="num">Worst relative error on [−8, 8]</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="controls mt-2 mb-0"><button class="btn" type="button" id="speed-run">Measure again</button></div>
+          </div>
+        </div>
+        <div class="prose mt-2">
+          <p>Simpson needs about a hundred evaluations of <span class="math">e<sup>−t²/2</sup></span> per point for 10 correct digits, and still fails in the tail. The final method
+            uses at most about 70 multiplications and one exponential, and reaches full precision. The A&amp;S formula is the fastest, a handful of operations, and is the
+            right choice when 7 digits of absolute accuracy are enough.</p>
+        </div>
+      </div>
+    </section>
+
+    </div>
+
+    <aside class="stage" aria-label="Current values">
+      <p class="stage-title">Current values</p>
+      <div class="stage-block">
+        <p class="stage-group">Calculator</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="calc"><span class="stage-label">x</span><code class="stage-value" data-stage-value="x">–</code></li>
+            <li class="stage-node" data-for="calc"><span class="stage-label">Φ(x)</span><span class="stage-note" data-stage-value="phi-note"></span><code class="stage-value" data-stage-value="phi">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+      <div class="stage-block">
+        <p class="stage-group">Representation</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="theory"><span class="stage-label">Liouville</span><code class="stage-value">R′ − xR = 1: no rational R</code></li>
+            <li class="stage-node" data-for="theory"><span class="stage-label">erf</span><code class="stage-value">Φ(x) = ½(1 + erf(x/√2))</code></li>
+          </ol>
+        </div></div>
+      </div>
+      <div class="stage-block">
+        <p class="stage-group">Accuracy and speed</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="acc"><span class="stage-label">Worst relative error</span><span class="stage-note">final method</span><code class="stage-value" data-stage-value="acc">–</code></li>
+            <li class="stage-node" data-for="eff"><span class="stage-label">Time</span><code class="stage-value" data-stage-value="eff">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+    </aside>
+    </div>
+  </main>
+
+  <site-footer></site-footer>
+  <template id="assignment">
+    <h3>HMWK 5 · Ex. 2</h3>
+    <h4>Es 2 – Numerical Computation of the Normal CDF</h4>
+    <p>Develop an efficient numerical method to compute the cumulative distribution function (CDF) of the standard normal distribution.
+      Implement the method and evaluate the CDF at several points, comparing the results with a trusted numerical reference found on the web. Investigate the numerical efficiency and accuracy of your implementation. Explain why the normal CDF cannot be expressed in terms of elementary functions, discussing the mathematical result behind this fact (Liouville's theorem).</p>
+    <p>Explain how the introduction of special functions, such as the error function (erf), provides an exact analytical representation of the CDF,
+      and why numerical methods are still necessary for its practical computation.
+      Explore possible numerical approaches, such as numerical integration, series expansions, or approximations based on the error function.
+      <a href="https://faculty.etsu.edu/gardnerr/4047/notes-Hogg-McKean-Craig/Hogg-McKean-Craig-3-4.pdf" target="_blank" rel="noopener">https://faculty.etsu.edu/gardnerr/4047/notes-Hogg-McKean-Craig/Hogg-McKean-Craig-3-4.pdf</a></p>
+    <p>examples of approaches:<br>
+      - Numerical integration: using the trapezoidal rule or Simpson's rule.<br>
+      - Series expansion: using the power series expansion of the error function.<br>
+      - Error function (erf): using the mathematical relationship between the normal CDF and the error function.<br>
+      ...</p>
+  </template>
+</body>
+</html>

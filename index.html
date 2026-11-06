@@ -7,9 +7,9 @@
   <meta name="description" content="Statistics homeworks by Edoardo Conforti, MSc Cybersecurity 2026–2027.">
   <meta name="author" content="Edoardo Conforti">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="assets/css/style.css?v=9">
-  <script src="assets/js/theme.js?v=9"></script>
-  <script src="assets/js/layout.js?v=9"></script>
+  <link rel="stylesheet" href="assets/css/style.css?v=10">
+  <script src="assets/js/theme.js?v=10"></script>
+  <script src="assets/js/layout.js?v=10"></script>
   <style>
     /* homework list: one entry per homework, picture alternating left and right */
     .hw-list { display: grid; gap: 22px; max-width: 860px; margin-inline: auto; }
@@ -66,6 +66,11 @@
     .mean-mini .g { stroke: var(--ink-2); stroke-width: 1.2; stroke-dasharray: 4 3; }
     .mean-mini .w { fill: none; stroke: var(--series-1); stroke-width: 1.1; stroke-linejoin: round; opacity: .5; }
     .mean-mini .h { fill: none; stroke: var(--series-2); stroke-width: 1.8; stroke-linejoin: round; }
+    .int-mini { width: 200px; height: 168px; }
+    .int-mini .r { fill: var(--series-1); fill-opacity: .28; stroke: var(--series-1); stroke-width: .8; }
+    .int-mini .l { fill: var(--series-2); fill-opacity: .3; stroke: var(--series-2); stroke-width: .8; }
+    .int-mini .g { stroke: var(--ink-2); stroke-width: 1; }
+    .int-mini .c { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linejoin: round; }
   </style>
 </head>
 <body>
@@ -164,6 +169,23 @@
               <p class="hw-sub">Welford's Recurrences and Sampling Mean and Variance</p>
             </div>
           </a>
+
+          <article class="card hw-entry hw-static" id="homework-5" data-rail="Homework 5">
+            <div class="hw-visual" aria-hidden="true">
+              <svg class="int-mini" viewBox="0 0 200 168">
+                <rect class="r" x="8.0" y="156.2" width="13.1" height="1.8"/><rect class="r" x="21.1" y="151.7" width="13.1" height="6.3"/><rect class="r" x="34.3" y="140.2" width="13.1" height="17.8"/><rect class="r" x="47.4" y="116.9" width="13.1" height="41.1"/><rect class="r" x="60.6" y="81.0" width="13.1" height="77.0"/><rect class="r" x="73.7" y="41.0" width="13.1" height="117.0"/><rect class="r" x="86.9" y="13.8" width="13.1" height="144.2"/><rect class="l" x="100.0" y="136.9" width="66.1" height="21.1"/><rect class="l" x="100.0" y="115.7" width="50.5" height="21.1"/><rect class="l" x="100.0" y="94.6" width="41.3" height="21.1"/><rect class="l" x="100.0" y="73.4" width="33.9" height="21.1"/><rect class="l" x="100.0" y="52.3" width="27.0" height="21.1"/><rect class="l" x="100.0" y="31.1" width="20.0" height="21.1"/><rect class="l" x="100.0" y="10.0" width="11.1" height="21.1"/>
+                <line class="g" x1="8" y1="158" x2="192" y2="158"/>
+                <polyline class="c" points="8.0,157.1 9.5,157.0 11.1,156.8 12.6,156.5 14.1,156.3 15.7,156.0 17.2,155.7 18.7,155.3 20.3,154.8 21.8,154.3 23.3,153.8 24.9,153.1 26.4,152.4 27.9,151.6 29.5,150.7 31.0,149.7 32.5,148.6 34.1,147.3 35.6,146.0 37.1,144.4 38.7,142.8 40.2,141.0 41.7,139.0 43.3,136.9 44.8,134.6 46.3,132.1 47.9,129.4 49.4,126.5 50.9,123.5 52.5,120.3 54.0,116.9 55.5,113.2 57.1,109.5 58.6,105.5 60.1,101.4 61.7,97.2 63.2,92.8 64.7,88.3 66.3,83.6 67.8,79.0 69.3,74.2 70.9,69.4 72.4,64.6 73.9,59.9 75.5,55.2 77.0,50.5 78.5,46.0 80.1,41.6 81.6,37.4 83.1,33.4 84.7,29.6 86.2,26.1 87.7,22.9 89.3,20.0 90.8,17.4 92.3,15.2 93.9,13.3 95.4,11.9 96.9,10.8 98.5,10.2 100.0,10.0 101.5,10.2 103.1,10.8 104.6,11.9 106.1,13.3 107.7,15.2 109.2,17.4 110.7,20.0 112.3,22.9 113.8,26.1 115.3,29.6 116.9,33.4 118.4,37.4 119.9,41.6 121.5,46.0 123.0,50.5 124.5,55.2 126.1,59.9 127.6,64.6 129.1,69.4 130.7,74.2 132.2,79.0 133.7,83.6 135.3,88.3 136.8,92.8 138.3,97.2 139.9,101.4 141.4,105.5 142.9,109.5 144.5,113.2 146.0,116.9 147.5,120.3 149.1,123.5 150.6,126.5 152.1,129.4 153.7,132.1 155.2,134.6 156.7,136.9 158.3,139.0 159.8,141.0 161.3,142.8 162.9,144.4 164.4,146.0 165.9,147.3 167.5,148.6 169.0,149.7 170.5,150.7 172.1,151.6 173.6,152.4 175.1,153.1 176.7,153.8 178.2,154.3 179.7,154.8 181.3,155.3 182.8,155.7 184.3,156.0 185.9,156.3 187.4,156.5 188.9,156.8 190.5,157.0 192.0,157.1"/>
+              </svg>
+            </div>
+            <div class="hw-body">
+              <h2>Homework 5</h2>
+              <ul class="hw-parts">
+                <li><a href="homework-5/"><span class="part">Ex. 1</span><span>Riemann and Lebesgue Integration</span></a></li>
+                <li><a href="homework-5/ex-2/"><span class="part">Ex. 2</span><span>Numerical Computation of the Normal CDF</span></a></li>
+              </ul>
+            </div>
+          </article>
         </div>
       </div>
     </section>
