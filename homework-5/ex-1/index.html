@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homework 5 · Ex. 1 · Statistics Homeworks</title>
+  <meta name="description" content="Riemann sums (partition of the domain) and Lebesgue sums (partition of the range) computed numerically and compared in accuracy, convergence and cost, with the Dirichlet and Thomae functions.">
+  <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../assets/css/style.css?v=10">
+  <link rel="stylesheet" href="../../homework-3/hw3.css">
+  <link rel="stylesheet" href="../hw5.css?v=3">
+  <script src="../../assets/js/theme.js?v=10"></script>
+  <script src="../../assets/js/layout.js?v=10"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <site-header homework="5"></site-header>
+
+  <main>
+    <div class="part-bar">
+      <nav class="seg3d" aria-label="Homework 5 exercises" data-active="1">
+        <span class="seg3d-thumb" aria-hidden="true"></span>
+        <a href="../ex-1/" aria-current="page">Ex. 1</a>
+        <a href="../ex-2/">Ex. 2</a>
+      </nav>
+    </div>
+
+    <div class="wrap hero">
+      <h1>Riemann and Lebesgue Integration</h1>
+      <p class="lede">The same area cut in two directions: vertical strips over a partition of the domain, horizontal slabs over a partition
+        of the range. Both computed numerically, compared, and pushed to functions where they stop agreeing.</p>
+    </div>
+
+    <div class="lab wrap">
+    <div class="lab-main">
+
+    <!-- 01 ------------------------------------------------------------ -->
+    <section class="block" id="idea" data-stage="fig">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">01</span><h2>Two ways to cut the area</h2></div>
+        <p class="section-sub">For a function <span class="math">f ≥ 0</span> on <span class="math">[a, b]</span>.</p>
+
+        <div class="grid grid-2">
+          <div class="prose">
+            <h3>Riemann: partition the domain</h3>
+            <p>Split <span class="math">[a, b]</span> into <var>N</var> subintervals of width <span class="math">h = (b − a)/N</span>, pick a point
+              <span class="math">ξᵢ</span> in each and add the rectangles:</p>
+            <div class="math-block">R<sub>N</sub> = ∑ᵢ f(ξᵢ) h  →  ∫ₐᵇ f(x) dx</div>
+            <p>Here <span class="math">ξᵢ</span> is the midpoint. The limit must be the same for every choice of points, otherwise
+              <var>f</var> is not Riemann-integrable.</p>
+          </div>
+          <div class="prose">
+            <h3>Lebesgue: partition the range</h3>
+            <p>Split the values <span class="math">y₀ &lt; y₁ &lt; … &lt; y<sub>N</sub></span> and take the preimages
+              <span class="math">Eₖ = f⁻¹([yₖ₋₁, yₖ))</span>, sets of points of the domain with their measure <span class="math">μ(Eₖ)</span>:</p>
+            <div class="math-block">L<sub>N</sub> = ∑ₖ yₖ μ(Eₖ)  →  ∫ f dμ</div>
+            <p>Regrouping the sum by levels gives the same thing as slabs of height <span class="math">Δy</span> and length
+              <span class="math">μ{f &gt; y}</span>: <span class="math">∫ f dμ = ∫₀^∞ μ{x : f(x) &gt; t} dt</span>.</p>
+          </div>
+        </div>
+
+        <div class="controls mt-2">
+          <label class="field"><span>Function</span><select id="fig-f"></select></label>
+          <label class="field"><span>Pieces N = <output id="fig-n-out">8</output></span><input type="range" id="fig-n" min="2" max="40" value="8"></label>
+        </div>
+        <div class="grid grid-2">
+          <div><p class="chart-title">Riemann: N strips</p><p class="chart-sub" id="fig-r-sub"></p><div class="slices" id="fig-r"></div></div>
+          <div><p class="chart-title">Lebesgue: N slabs</p><p class="chart-sub" id="fig-l-sub"></p><div class="slices" id="fig-l"></div></div>
+        </div>
+        <p class="small muted">In the Lebesgue picture each slab is drawn only over the set where <span class="math">f &gt; t</span>, so its area is
+          <span class="math">Δy · μ{f &gt; t}</span>. The set can be several intervals (for <span class="math">|x − 0.5|</span>, two).</p>
+      </div>
+    </section>
+
+    <!-- 02 ------------------------------------------------------------ -->
+    <section class="block" id="method" data-stage="fig">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">02</span><h2>The numerical methods</h2></div>
+        <div class="grid grid-2">
+          <div class="prose">
+            <h3>Riemann sum</h3>
+            <p>Midpoint rule: <var>N</var> evaluations of <var>f</var>, nothing else.</p>
+            <pre><code>let s = 0;
+for (let i = 0; i &lt; N; i++) s += f(a + (i + 0.5) * h);
+return s * h;</code></pre>
+          </div>
+          <div class="prose">
+            <h3>Lebesgue sum</h3>
+            <p>Levels <span class="math">t<sub>k</sub></span> at the midpoints of <var>N</var> equal steps of the range
+              <span class="math">[min f, max f]</span>, and</p>
+            <div class="math-block">L<sub>N</sub> = min f · (b − a) + ∑ₖ Δy · μ{f &gt; tₖ}</div>
+            <p>The hard part is the measure of the preimage. It is found on a grid of 2 048 cells: a cell entirely above
+              <span class="math">tₖ</span> counts whole, a cell where <var>f</var> crosses <span class="math">tₖ</span> is cut at the crossing, located by bisection
+              to machine precision.</p>
+          </div>
+        </div>
+        <div class="callout"><p>For an unbounded <var>f</var> such as <span class="math">1/√x</span> the range is cut at a level that grows with <var>N</var>
+          (here <span class="math">1 + N<sup>2/3</sup></span>): the part of the area above it is lost, as the Riemann sum loses the area next to <span class="math">x = 0</span>.
+          The grid assumes <var>f</var> crosses each level at most once inside a cell, true for every function below.</p></div>
+      </div>
+    </section>
+
+    <!-- 03 ------------------------------------------------------------ -->
+    <section class="block" id="accuracy" data-stage="conv">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">03</span><h2>Accuracy and convergence</h2></div>
+        <p class="section-sub">Absolute error against the exact integral for <span class="math">N = 5, 15, 45, …, 3 645</span>. The slope is the
+          observed order: error ≈ C·N<sup>slope</sup>.</p>
+
+        <div class="table-wrap">
+          <table id="acc-table">
+            <thead><tr><th>f</th><th class="num">Exact</th><th class="num">Riemann, N = 3 645</th><th class="num">Lebesgue, N = 3 645</th>
+              <th class="num">Riemann error</th><th class="num">Lebesgue error</th><th class="num">Riemann slope</th><th class="num">Lebesgue slope</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="controls mt-2">
+          <label class="field"><span>Function</span><select id="acc-f"></select></label>
+        </div>
+        <p class="chart-title">Error against N</p>
+        <p class="chart-sub">Log–log scale. An exact result (error 0) is drawn at the bottom of the chart.</p>
+        <div id="acc-chart"></div>
+
+        <div class="prose mt-2">
+          <ul>
+            <li><strong>Smooth functions</strong> (<span class="math">sin x</span>, <span class="math">x²</span>, <span class="math">sin x / x</span>): Riemann converges like
+              <span class="math">N⁻²</span>, Lebesgue like <span class="math">N<sup>−1.5</sup></span>. The Lebesgue error is set by how smooth
+              <span class="math">t ↦ μ{f &gt; t}</span> is, not <var>f</var>: where <span class="math">f′ = 0</span> (the top of <span class="math">sin x</span>, the bottom of
+              <span class="math">x²</span>) this function has a square-root corner, e.g. <span class="math">μ{x² &gt; t} = 1 − √t</span>.</li>
+            <li><strong>Step functions</strong>: Lebesgue is exact for every <var>N</var>, since <span class="math">μ{f &gt; t}</span> is constant between the two values.
+              Riemann is exact only when the jump falls on a partition point; with odd <var>N</var> it sits inside a strip and the error is of order
+              <span class="math">1/N</span>.</li>
+            <li><strong><span class="math">|x − 0.5|</span></strong>: <span class="math">μ{f &gt; t} = 1 − 2t</span> is a straight line, so Lebesgue is exact. Riemann is exact on
+              each linear piece and errs only in the strip containing the corner, order <span class="math">N⁻²</span>.</li>
+            <li><strong><span class="math">1/√x</span></strong>: both are slow, about <span class="math">N<sup>−1/2</sup></span>, because the area is concentrated near
+              <span class="math">x = 0</span>, where the values are unbounded.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 ------------------------------------------------------------ -->
+    <section class="block" id="cost" data-stage="cost">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">04</span><h2>Computational efficiency</h2></div>
+        <p class="section-sub">Evaluations of <var>f</var> and time in this browser, for the same <var>N</var>.</p>
+        <div class="controls">
+          <label class="field"><span>N</span><select id="cost-n"></select></label>
+          <button class="btn" type="button" id="cost-run">Measure again</button>
+        </div>
+        <div class="table-wrap">
+          <table id="cost-table">
+            <thead><tr><th>f</th><th class="num">Riemann evaluations</th><th class="num">Riemann time</th><th class="num">Lebesgue evaluations</th><th class="num">Lebesgue time</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="prose mt-2">
+          <p>A Riemann sum costs <var>N</var> evaluations. A Lebesgue sum costs the grid (2 049 evaluations) plus about 50 bisection steps for every crossing of
+            every level, so it is tens of times more expensive. On an interval of the real line, where measuring a preimage means finding where
+            <var>f</var> crosses a level, the domain partition is the cheaper one. The range partition pays off when the measure of
+            <span class="math">{f &gt; t}</span> is known or easy to estimate, and when the function is too irregular for strips (section 06).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 ------------------------------------------------------------ -->
+    <section class="block" id="same" data-stage="conv">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">05</span><h2>Do they converge to the same value?</h2></div>
+        <div class="prose">
+          <p>Yes, for every function above: the two columns of section 03 agree with the exact integral within <span class="math">10⁻⁶</span> for the bounded ones, and their difference keeps shrinking as <var>N</var> grows.
+            This is a theorem: a bounded function that is Riemann-integrable on <span class="math">[a, b]</span> is also Lebesgue-integrable, with the same integral.</p>
+          <p><span class="math">1/√x</span> is not Riemann-integrable in the strict sense (it is unbounded on <span class="math">(0, 1]</span>); its improper Riemann integral
+            <span class="math">lim<sub>ε→0</sub> ∫<sub>ε</sub>¹ x<sup>−1/2</sup> dx = 2</span> exists and equals the Lebesgue integral
+            <span class="math">∫₀^∞ μ{f &gt; t} dt = 1 + ∫₁^∞ t⁻² dt = 2</span>. Both numerical sums approach 2, slowly.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 ------------------------------------------------------------ -->
+    <section class="block" id="dirichlet" data-stage="path">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">06</span><h2>Dirichlet function: the two approaches disagree</h2></div>
+        <p class="section-sub"><span class="math">f(x) = 1</span> if <var>x</var> is rational, <span class="math">0</span> if irrational, on <span class="math">[0, 1]</span>.</p>
+        <div class="grid grid-2">
+          <div class="prose">
+            <h3>Riemann</h3>
+            <p>Every subinterval contains rationals and irrationals, so for every <var>N</var> the upper sum is 1 and the lower sum is 0.
+              Rational points <span class="math">ξᵢ</span> (such as the midpoints) give <span class="math">R<sub>N</sub> = 1</span>, irrational ones
+              (midpoint + <span class="math">h/(10√2)</span>) give <span class="math">R<sub>N</sub> = 0</span>. No limit: not Riemann-integrable. (In the table each point is rational or irrational by construction;
+              the code does not test a float.)</p>
+            <div class="table-wrap">
+              <table id="dir-table">
+                <thead><tr><th class="num">N</th><th class="num">Rational points</th><th class="num">Irrational points</th><th class="num">Upper sum</th><th class="num">Lower sum</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="prose">
+            <h3>Lebesgue</h3>
+            <p>The range has two values. <span class="math">f⁻¹(1) = ℚ ∩ [0, 1]</span> is countable, so it has measure 0: list the rationals
+              <span class="math">r₁, r₂, …</span> and cover <span class="math">rₖ</span> with an interval of length <span class="math">ε/2ᵏ</span>, total length at most
+              <span class="math">ε</span>, for every <span class="math">ε &gt; 0</span>. Then</p>
+            <div class="math-block">∫ f dμ = 1 · μ(ℚ ∩ [0, 1]) + 0 · μ(irrationals) = 0</div>
+            <p>Lebesgue gives a value where Riemann gives none.</p>
+          </div>
+        </div>
+        <div class="callout warn"><p>A computer cannot tell the two apart: every floating-point number is a fraction <span class="math">m/2ᵏ</span>, hence rational.
+          Evaluated in code, the Dirichlet function is 1 at every point it can be asked about, and any sum of samples returns 1. The value 0 comes from the measure,
+          not from sampling.</p></div>
+      </div>
+    </section>
+
+    <!-- 07 ------------------------------------------------------------ -->
+    <section class="block" id="thomae" data-stage="path">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">07</span><h2>Thomae's function: they agree again</h2></div>
+        <p class="section-sub"><span class="math">f(p/q) = 1/q</span> in lowest terms, <span class="math">0</span> at irrationals. Discontinuous at every rational,
+          yet both integrals are 0. Rational points are handled as exact fractions <span class="math">(p, q)</span>, not as floats.</p>
+        <div class="grid grid-2">
+          <div>
+            <p class="chart-title">Riemann sums against N</p>
+            <p class="chart-sub">Upper sum: on each strip, 1/q for the smallest denominator q it contains. Lower sum: 0.</p>
+            <div id="th-chart"></div>
+          </div>
+          <div class="prose">
+            <h3>Riemann</h3>
+            <p>Only finitely many points have <span class="math">f ≥ 1/q</span>, each touches at most two strips, and the upper sum goes to 0 (<span id="th-note"></span>).
+              The lower sum is 0. Riemann-integrable, integral 0: its discontinuities, the rationals, have measure zero.</p>
+            <h3>Lebesgue</h3>
+            <p>For any level <span class="math">t &gt; 0</span>, <span class="math">{f &gt; t}</span> is a finite set of fractions, measure 0. Every slab has length 0 and
+              <span class="math">L<sub>N</sub> = 0</span> exactly, for every <var>N</var>.</p>
+            <div class="table-wrap">
+              <table id="th-table">
+                <thead><tr><th class="num">q</th><th class="num">Points with f ≥ 1/q</th><th class="num">Measure</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    </div>
+
+    <aside class="stage" aria-label="Current values">
+      <p class="stage-title">Current values</p>
+      <div class="stage-block">
+        <p class="stage-group">Picture</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="fig"><span class="stage-label">f</span><code class="stage-value" data-stage-value="fig-f">–</code></li>
+            <li class="stage-node" data-for="fig"><span class="stage-label">Riemann R<sub>N</sub></span><code class="stage-value" data-stage-value="fig-r">–</code></li>
+            <li class="stage-node" data-for="fig"><span class="stage-label">Lebesgue L<sub>N</sub></span><code class="stage-value" data-stage-value="fig-l">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+      <div class="stage-block">
+        <p class="stage-group">Convergence</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="conv"><span class="stage-label">Observed order</span><span class="stage-note" data-stage-value="acc-note"></span><code class="stage-value" data-stage-value="acc">–</code></li>
+            <li class="stage-node gap" data-for="cost"><span class="stage-label">Cost ratio</span><span class="stage-note" data-stage-value="cost-note"></span><code class="stage-value" data-stage-value="cost">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+      <div class="stage-block">
+        <p class="stage-group">Pathological</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="path"><span class="stage-label">Dirichlet</span><code class="stage-value">Riemann: none · Lebesgue: 0</code></li>
+            <li class="stage-node" data-for="path"><span class="stage-label">Thomae</span><code class="stage-value">Riemann: 0 · Lebesgue: 0</code></li>
+          </ol>
+        </div></div>
+      </div>
+    </aside>
+    </div>
+  </main>
+
+  <site-footer></site-footer>
+  <template id="assignment">
+    <h3>HMWK 5 · Ex. 1</h3>
+    <h4>Es 1 – Riemann and Lebesgue Integration</h4>
+    <p>Choose a collection of interesting functions f1, f2, ... and compute their integrals numerically. Approximate the integrals using approaches inspired by both the Riemann definition (partitioning the domain into subintervals)
+      and the Lebesgue definition (partitioning the range of function values into measurable subsets and considering their preimages in the domain).
+      Compare the two numerical approaches in terms of accuracy, convergence, and computational efficiency.
+      For functions that are Riemann-integrable, compare the numerical results and discuss whether the two approaches converge to the same value.
+      Include examples of functions for which the two approaches behave differently, if possible.</p>
+    <p>Examples:<br>
+      f(x) = sin(x), x in [0, pi]<br>
+      f(x) = x^2, x in [0, 1]<br>
+      f(x) = 1 if x &lt; 0.5, 3 if x &gt;= 0.5, x in [0, 1]<br>
+      f(x) = |x - 0.5|, x in [0, 1]<br>
+      f(x) = 1 / sqrt(x), x in (0, 1]<br>
+      f(x) = 1 if x &lt; 0.5, 0 if x &gt;= 0.5, x in [0, 1]<br>
+      f(x) = sin(x) / x, x in [0, pi]</p>
+    <p>"Pathological" functions:<br>
+      f(x) = 1 if x is rational, 0 if x is irrational, x in [0, 1] (Dirichlet function)<br>
+      f(x) = 1/q if x = p/q in lowest terms, 0 if x is irrational, x in [0, 1] (Thomae's function)<br>
+      ...</p>
+  </template>
+</body>
+</html>

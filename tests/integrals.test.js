@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import * as I from '../homework-5/integrals.js';
+import * as I from '../homework-5/ex-1/integrals.js';
 
 test('Riemann and Lebesgue sums converge to the exact integrals', () => {
   for (const F of I.FUNCTIONS) {

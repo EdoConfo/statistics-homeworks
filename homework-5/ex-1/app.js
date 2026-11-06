@@ -1,8 +1,8 @@
 // Homework 5 · Ex. 1 page controller: the strips/slabs picture (01), accuracy and convergence (03),
 // cost (04), the Dirichlet table (06) and Thomae's function (07).
 import * as I from './integrals.js';
-import { xyChart, fmtNum } from '../homework-3/plots.js';
-import { $, group, stage, whenVisible, yieldToBrowser } from '../homework-2/ui.js';
+import { xyChart, fmtNum } from '../../homework-3/plots.js';
+import { $, group, stage, whenVisible, yieldToBrowser } from '../../homework-2/ui.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
 const NS = [5, 15, 45, 135, 405, 1215, 3645];

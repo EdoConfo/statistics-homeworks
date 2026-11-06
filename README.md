@@ -11,7 +11,7 @@ Interactive homework pages for the **Statistics** course: cryptographic primitiv
 | Homework 2 | [Homework 2](https://edoconfo.github.io/statistics-homeworks/homework-2/) | A message encrypted with a toy EC-ElGamal scheme on secp256k1 (built on the Part 1 code, private key restricted to `[1, 2^B]`) and with the Caesar cipher. Comparison of procedures, key spaces and ciphertext statistics. Caesar key recovery from letter frequencies (χ²) trained on an English corpus, tested on held-out text of different lengths against top-letter, bigram and word-list scoring. Brute-force and baby-step giant-step recovery of the toy private key, scaling to real key sizes, and a discussion of key-space vs design weaknesses. |
 | Homework 3 | [Homework 3](https://edoconfo.github.io/statistics-homeworks/homework-3/) | n systems and m attackers: penetration scores as random walks with Bernoulli and Rademacher increments. Simulated trajectories of the total, average and normalized score and their distributions as n grows, the Law of Large Numbers with Chebyshev's bound, the variance under the three normalizations (log–log slopes 1, −1, 0), the Central Limit Theorem in the Rademacher case, and the aggregate score of all attackers as n and m change. |
 | Homework 4 | [Homework 4](https://edoconfo.github.io/statistics-homeworks/homework-4/) | Welford's recurrence formulas for the mean, the sum of squares and the variance, derived and written in a few lines of code. m hackers attempt n systems with a Binomial(10, 0.3) score per attempt: each hacker's sampling mean and variance computed with Welford, their averages compared with μ and σ², and their spread across hackers as n grows. |
-| Homework 5 · Ex. 1 | [Riemann and Lebesgue Integration](https://edoconfo.github.io/statistics-homeworks/homework-5/) | Midpoint Riemann sums (partition of the domain) and Lebesgue sums (partition of the range, measure of each superlevel set found by bisection) for sin x, x², two step functions, \|x − 0.5\|, 1/√x and sin x / x. Strips-and-slabs picture, errors and observed orders, evaluation counts and timings, agreement of the two limits, and the Dirichlet and Thomae functions. |
+| Homework 5 · Ex. 1 | [Riemann and Lebesgue Integration](https://edoconfo.github.io/statistics-homeworks/homework-5/ex-1/) | Midpoint Riemann sums (partition of the domain) and Lebesgue sums (partition of the range, measure of each superlevel set found by bisection) for sin x, x², two step functions, \|x − 0.5\|, 1/√x and sin x / x. Strips-and-slabs picture, errors and observed orders, evaluation counts and timings, agreement of the two limits, and the Dirichlet and Thomae functions. |
 | Homework 5 · Ex. 2 | [Numerical Computation of the Normal CDF](https://edoconfo.github.io/statistics-homeworks/homework-5/ex-2/) | Liouville's theorem and why Φ has no elementary formula, Φ through erf, and Φ computed by trapezoid, Simpson, two power series, Laplace's continued fraction and the A&S erf approximation. A positive-term series plus continued fraction reaches double precision everywhere; checked against Wikipedia's 68–95–99.7 table and mpmath, with error and timing comparisons. |
 
 ## Structure
@@ -43,8 +43,10 @@ homework-4/
   welford.js                Welford's recurrences, Binomial(10, p) scores, the m hackers × n systems experiment
   app.js                    page sections
 homework-5/
-  index.html, app.js        Ex. 1 page
-  integrals.js              Riemann and Lebesgue sums, superlevel-set measures, Thomae's function in exact fractions
+  index.html                redirects to exercise 1
+  ex-1/
+    integrals.js            Riemann and Lebesgue sums, superlevel-set measures, Thomae's function in exact fractions
+    app.js                  page sections
   ex-2/
     normal.js               Φ by quadrature, series, continued fraction, A&S erf; reference values
     app.js                  page sections
