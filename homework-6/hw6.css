@@ -1,0 +1,26 @@
+/* Homework 6: cross tables and the 100% bars of the conditional distributions. */
+
+pre .cm { color: var(--muted); }
+.prose h3, h3.mt-3 { font-size: 1rem; }
+
+table.cross tbody th { font-weight: 600; color: var(--ink); background: var(--surface-2); }
+table.cross td.total, table.cross tr.total td { font-weight: 650; }
+table.cross tr.total th, table.cross tr.total td { border-top: 2px solid var(--border-strong); }
+
+.profiles { display: grid; gap: 8px; }
+.profile { display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: center; gap: 10px; }
+.profile.all { margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--border-strong); }
+.profile-label { font-size: 0.85rem; color: var(--ink-2); }
+.profile.all .profile-label { font-weight: 650; color: var(--ink); }
+.profile-bar { display: flex; height: 26px; border-radius: 6px; overflow: hidden; background: var(--surface-2); }
+.profile-bar .seg {
+  display: flex; align-items: center; justify-content: center;
+  font: 600 0.72rem/1 var(--mono); color: #fff; white-space: nowrap; overflow: hidden;
+}
+.profile-bar .seg + .seg { border-left: 2px solid var(--surface); }
+.s1 { background: var(--series-1); }
+.s2 { background: var(--series-2); }
+.s3 { background: var(--series-3); }
+.profile-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; font-size: 0.82rem; color: var(--ink-2); }
+.profile-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.profile-legend .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }

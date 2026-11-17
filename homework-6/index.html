@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homework 6 · Statistics Homeworks</title>
+  <meta name="description" content="Contingency table, marginal and conditional frequencies, expected frequencies under independence and the chi-square test of independence on a log of intrusion attempts.">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/css/style.css?v=11">
+  <link rel="stylesheet" href="../homework-3/hw3.css">
+  <link rel="stylesheet" href="hw6.css?v=1">
+  <script src="../assets/js/theme.js?v=11"></script>
+  <script src="../assets/js/layout.js?v=11"></script>
+  <script type="module" src="app.js?v=1"></script>
+</head>
+<body>
+  <site-header homework="6"></site-header>
+
+  <main>
+    <div class="wrap hero">
+      <h1>Statistical Independence</h1>
+      <p class="lede">A contingency table built from raw records, its marginal and conditional frequencies, the frequencies expected under
+        independence and the chi-square statistic that compares the two.</p>
+    </div>
+
+    <div class="lab wrap">
+    <div class="lab-main">
+
+    <!-- 01 ------------------------------------------------------------ -->
+    <section class="block" id="table" data-stage="data">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">01</span><h2>Dataset and contingency table</h2></div>
+        <p class="section-sub">For example, take a log of <var>n</var> = 500 intrusion attempts recorded by an intrusion detection system.
+          Each record carries two categorical variables: <span class="math">X</span> = the targeted service (Web, SSH, Email, Database) and
+          <span class="math">F</span> = the outcome of the attempt (Blocked, Detected, Undetected). The log is simulated.</p>
+
+        <div class="grid grid-2">
+          <div>
+            <p class="chart-title">First records</p>
+            <div class="table-wrap">
+              <table id="records">
+                <thead><tr><th class="num">#</th><th>X: service</th><th>F: outcome</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <p class="chart-title">Counting the pairs</p>
+            <pre><code>function contingencyTable(records, xKey, fKey) {
+  const rows = [], cols = [], cells = new Map();
+  const index = (list, v) =&gt; list.includes(v)
+    ? list.indexOf(v) : list.push(v) - 1;
+  for (const r of records) {
+    const key = index(rows, r[xKey]) + '|' + index(cols, r[fKey]);
+    cells.set(key, (cells.get(key) ?? 0) + 1);
+  }
+  const counts = rows.map((_, i) =&gt;
+    cols.map((_, j) =&gt; cells.get(i + '|' + j) ?? 0));
+  <span class="cm">// row totals nᵢ·, column totals n·ⱼ, grand total n</span>
+  ...
+}</code></pre>
+          </div>
+        </div>
+
+        <p class="chart-title mt-2">Contingency table: counts <span class="math">nᵢⱼ</span></p>
+        <div class="table-wrap">
+          <table id="t-counts" class="cross"></table>
+        </div>
+        <p class="small muted">Each cell <span class="math">nᵢⱼ</span> is the number of records with <span class="math">X = xᵢ</span> and
+          <span class="math">F = fⱼ</span>. The last column holds the row totals <span class="math">nᵢ·</span>, the last row the column totals
+          <span class="math">n·ⱼ</span>.</p>
+        <div class="controls mt-2 mb-0">
+          <button class="btn" type="button" id="run">New sample</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 ------------------------------------------------------------ -->
+    <section class="block" id="frequencies" data-stage="data">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">02</span><h2>Marginal and conditional frequencies</h2></div>
+        <p class="section-sub">Dividing by the grand total gives the joint relative frequencies <span class="math">fᵢⱼ = nᵢⱼ / n</span>; their row and
+          column sums are the marginal frequencies <span class="math">fᵢ· = nᵢ· / n</span> of <span class="math">X</span> and
+          <span class="math">f·ⱼ = n·ⱼ / n</span> of <span class="math">F</span>.</p>
+        <p class="chart-title">Joint and marginal relative frequencies</p>
+        <div class="table-wrap">
+          <table id="t-joint" class="cross"></table>
+        </div>
+
+        <h3 class="mt-3">Conditional frequencies</h3>
+        <p>Dividing by a row total instead gives the distribution of <span class="math">F</span> among the records with <span class="math">X = xᵢ</span>,
+          <span class="math">f(fⱼ | xᵢ) = nᵢⱼ / nᵢ·</span>. Dividing by a column total gives the distribution of <span class="math">X</span> among the
+          records with <span class="math">F = fⱼ</span>, <span class="math">f(xᵢ | fⱼ) = nᵢⱼ / n·ⱼ</span>.</p>
+        <div class="grid grid-2">
+          <div>
+            <p class="chart-title">F given X (each row sums to 100%)</p>
+            <div class="table-wrap"><table id="t-f-given-x" class="cross"></table></div>
+          </div>
+          <div>
+            <p class="chart-title">X given F (each column sums to 100%)</p>
+            <div class="table-wrap"><table id="t-x-given-f" class="cross"></table></div>
+          </div>
+        </div>
+        <p class="chart-title mt-3">Outcome by service, against the marginal distribution of the outcome</p>
+        <div id="profiles" class="profiles"></div>
+      </div>
+    </section>
+
+    <!-- 03 ------------------------------------------------------------ -->
+    <section class="block" id="expected" data-stage="test">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">03</span><h2>Expected frequencies under independence</h2></div>
+        <p class="section-sub">If <span class="math">X</span> and <span class="math">F</span> were independent, the joint frequency would be the product
+          of the marginals, <span class="math">fᵢⱼ = fᵢ· f·ⱼ</span>. Multiplying by <var>n</var> gives the counts expected in each cell, which keep the
+          same row and column totals as the observed table:</p>
+        <div class="math-block">Eᵢⱼ = n · (nᵢ· / n) · (n·ⱼ / n) = nᵢ· n·ⱼ / n</div>
+        <div class="grid grid-2">
+          <div>
+            <p class="chart-title">Expected counts <span class="math">Eᵢⱼ</span></p>
+            <div class="table-wrap"><table id="t-expected" class="cross"></table></div>
+          </div>
+          <div>
+            <p class="chart-title">Observed − expected <span class="math">nᵢⱼ − Eᵢⱼ</span></p>
+            <div class="table-wrap"><table id="t-diff" class="cross"></table></div>
+          </div>
+        </div>
+        <p class="small muted" id="expected-check"></p>
+      </div>
+    </section>
+
+    <!-- 04 ------------------------------------------------------------ -->
+    <section class="block" id="chi-square" data-stage="test">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">04</span><h2>Chi-square statistic and p-value</h2></div>
+        <p class="section-sub">Pearson's statistic adds up the squared differences between observed and expected counts, each scaled by the
+          expected count:</p>
+        <div class="math-block">χ² = ∑ᵢ ∑ⱼ (nᵢⱼ − Eᵢⱼ)² / Eᵢⱼ</div>
+        <p>It is 0 when the table matches independence exactly and grows with the distance from it. Under independence, for large
+          <var>n</var>, it follows a chi-square distribution with <span class="math">(r − 1)(c − 1)</span> degrees of freedom, where
+          <var>r</var> and <var>c</var> are the numbers of categories of <span class="math">X</span> and <span class="math">F</span>. The p-value is
+          the probability, under independence, of a value at least as large as the observed one: <span class="math">p = P(Y ≥ χ²)</span> with
+          <span class="math">Y</span> chi-square with <span class="math">(r − 1)(c − 1)</span> degrees of freedom.</p>
+        <p class="chart-title">Contribution of each cell <span class="math">(nᵢⱼ − Eᵢⱼ)² / Eᵢⱼ</span></p>
+        <div class="table-wrap"><table id="t-contrib" class="cross"></table></div>
+        <div class="tiles mt-2" id="x-tiles"></div>
+        <pre><code>const E = rowTotals.map((r) =&gt; colTotals.map((c) =&gt; r * c / n));
+const chi2 = counts.flat().reduce((s, o, k) =&gt; {
+  const e = E.flat()[k];
+  return s + (o - e) ** 2 / e;
+}, 0);
+const df = (rows.length - 1) * (cols.length - 1);
+<span class="cm">// p-value: upper tail of the chi-square distribution</span>
+const p = gammaQ(df / 2, chi2 / 2);</code></pre>
+      </div>
+    </section>
+
+    <!-- 05 ------------------------------------------------------------ -->
+    <section class="block" id="theory" data-stage="theory">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">05</span><h2>Independence in probability and in statistics</h2></div>
+        <div class="grid grid-2">
+          <div class="prose">
+            <h3>In probability</h3>
+            <p>Two events <var>A</var> and <var>B</var> are independent when</p>
+            <div class="math-block">P(A ∩ B) = P(A) P(B)</div>
+            <p>or, if <span class="math">P(B) &gt; 0</span>, when <span class="math">P(A | B) = P(A)</span>: knowing that <var>B</var> happened does not
+              change the probability of <var>A</var>. Two random variables <var>X</var> and <var>Y</var> are independent when this holds for every pair
+              of their events; for discrete variables,</p>
+            <div class="math-block">P(X = x, Y = y) = P(X = x) P(Y = y) for all x, y</div>
+            <p>that is, the joint distribution is the product of the marginals, and every conditional distribution equals the marginal one.</p>
+          </div>
+          <div class="prose">
+            <h3>In statistics</h3>
+            <p>On observed data the probabilities are replaced by relative frequencies. <span class="math">X</span> and <span class="math">F</span> are
+              statistically independent in a table when</p>
+            <div class="math-block">fᵢⱼ = fᵢ· f·ⱼ, i.e. nᵢⱼ = nᵢ· n·ⱼ / n</div>
+            <p>for every cell. Equivalently, all the conditional distributions <span class="math">f(F | xᵢ)</span> are the same and equal to the marginal
+              <span class="math">f·ⱼ</span> (the bars of section 02 would all look like “All”), and then <span class="math">χ² = 0</span>.</p>
+            <p>A sample from independent variables almost never gives <span class="math">χ² = 0</span> exactly, because of random fluctuations. The
+              chi-square test decides whether the observed deviation is larger than what chance would produce: with null hypothesis
+              <span class="math">H₀</span>: <span class="math">X</span> and <span class="math">F</span> are independent, <span class="math">H₀</span> is
+              rejected at level <span class="math">α = 0.05</span> when <span class="math">p &lt; 0.05</span>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 ------------------------------------------------------------ -->
+    <section class="block" id="conclusions" data-stage="test">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">06</span><h2>Interpretation and conclusions</h2></div>
+        <p class="section-sub" id="verdict"></p>
+        <p id="pattern"></p>
+        <div class="grid grid-2 mt-2">
+          <div class="prose">
+            <h3>What the test says</h3>
+            <ul>
+              <li id="meaning"></li>
+              <li>The test only says <em>whether</em> the two variables are associated, not how strongly: <span class="math">χ²</span> grows with
+                <var>n</var>, so with many records even a small association gives a small p-value. The conditional frequencies show where and how
+                large the differences are.</li>
+              <li>A p-value above 0.05 would not prove independence either: it only says that the data are compatible with it, since a small sample
+                may miss a real association.</li>
+            </ul>
+          </div>
+          <div class="prose">
+            <h3>Association is not causality</h3>
+            <p>Dependence means that the two variables vary together, not that one causes the other. Here it does not prove that a service is
+              <em>itself</em> harder to defend. The association could come from a third variable acting on both, for example the type of attack:
+              phishing is aimed at email and is hard to detect, so attack type would link the service and the outcome. It could also come from how
+              the data were collected, such as sensors that cover some services better than others. The direction can also be the reverse
+              of the one assumed: a service whose attacks often go undetected may attract more attacks of the same kind.</p>
+            <p>Establishing a cause requires a controlled experiment, in which only the suspected cause is changed, or an analysis that accounts
+              for the possible confounders. The chi-square test alone only detects the association.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    </div>
+
+    <aside class="stage" aria-label="Current values">
+      <p class="stage-title">Current values</p>
+      <div class="stage-block">
+        <p class="stage-group">Dataset</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="data test theory"><span class="stage-label">Records</span><code class="stage-value" data-stage-value="data">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+      <div class="stage-block">
+        <p class="stage-group">Test of independence</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="test theory"><span class="stage-label">χ²</span><span class="stage-note" data-stage-value="df"></span><code class="stage-value" data-stage-value="chi">–</code></li>
+            <li class="stage-node" data-for="test theory"><span class="stage-label">p-value</span><code class="stage-value" data-stage-value="p">–</code></li>
+            <li class="stage-node gap" data-for="test theory"><span class="stage-label">X and F</span><code class="stage-value" data-stage-value="verdict">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+    </aside>
+    </div>
+  </main>
+
+  <site-footer></site-footer>
+  <template id="assignment">
+    <h3>Homework (Statistical Independence)</h3>
+    <p>Given any bivariate dataset (X, F), Programmatically construct the contingency table and calculate conditional and marginal frequencies.</p>
+    <p>Compute the expected frequencies under the assumption of independence. Calculate the Chi-square statistic (OPTIONAL: also the p-value).</p>
+    <p>Recall the theoretical concepts of independence in statistics and probability. Interpret the results to determine whether the two variables are statistically independent or dependent. Briefly discuss the conclusions, distinguishing statistical association from causality.</p>
+  </template>
+</body>
+</html>
