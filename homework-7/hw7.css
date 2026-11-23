@@ -1,0 +1,40 @@
+/* Homework 7: definition cards, the implication diagram and the tables. */
+
+.mode { border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; background: var(--surface); min-width: 0; }
+.mode h3 { font-size: 1rem; margin: 0 0 10px; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.mode .mode-tag { font: 500 0.85rem/1.2 var(--mono); color: var(--muted); }
+.mode p { font-size: 0.93rem; margin-bottom: 0; }
+.mode .math-block { margin: 0 0 10px; }
+.modes, .laws { margin-bottom: 16px; }
+h3.mt-3 { font-size: 1rem; }
+
+/* 02: implications */
+.implications { margin: 8px 0 24px; }
+.implications svg { display: block; width: 100%; max-width: 640px; height: auto; margin: 0 auto; overflow: visible; }
+.implications .node rect { fill: var(--surface-2); stroke: var(--border-strong); stroke-width: 1.2; }
+.implications .node text { font: 600 15px var(--sans); fill: var(--ink); text-anchor: middle; dominant-baseline: middle; }
+.implications .edge { fill: none; stroke: var(--ink-2); stroke-width: 1.8; }
+.implications .edge.cond { stroke-dasharray: 5 4; }
+.implications marker path { fill: var(--ink-2); }
+.implications .note { font: 500 12px var(--sans); fill: var(--muted); text-anchor: middle; }
+
+table.counter td:first-child, table.results td:last-child { font-family: var(--mono); font-size: 0.85rem; white-space: nowrap; }
+table.results td:first-child { font-weight: 600; }
+table.results tr.current td { background: var(--surface-2); }
+table.results tr.current td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+
+table.modes-summary .c { text-align: center; font: 600 0.82rem/1 var(--mono); }
+table.modes-summary .yes { color: var(--series-3); }
+table.modes-summary .no { color: var(--critical); }
+table.growth td:last-child { font-family: var(--mono); font-weight: 400; }
+table.growth .current { background: var(--surface-2); }
+
+.scale-tiles .t-value { font-family: var(--mono); font-size: 1.15rem; }
+
+/* 07: contingency of alarm and attack */
+table.cross tbody th { font-weight: 600; color: var(--ink); background: var(--surface-2); }
+table.cross td.total, table.cross tr.total td { font-weight: 650; }
+table.cross tr.total th, table.cross tr.total td { border-top: 2px solid var(--border-strong); }
+table.cross td.hl { color: var(--accent); font-weight: 650; }
+
+input[type="range"]:disabled { cursor: not-allowed; }

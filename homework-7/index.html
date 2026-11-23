@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homework 7 · Statistics Homeworks</title>
+  <meta name="description" content="The four modes of convergence and their role in the LLN and the CLT, why √n appears, conditional probability and Bayes' theorem with prior, likelihood and posterior.">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/css/style.css?v=12">
+  <link rel="stylesheet" href="../homework-3/hw3.css">
+  <link rel="stylesheet" href="../homework-4/hw4.css?v=2">
+  <link rel="stylesheet" href="hw7.css?v=2">
+  <script src="../assets/js/theme.js?v=12"></script>
+  <script src="../assets/js/layout.js?v=12"></script>
+  <script type="module" src="app.js?v=5"></script>
+</head>
+<body>
+  <site-header homework="7"></site-header>
+
+  <main>
+    <div class="part-bar">
+      <nav class="seg3d" aria-label="Homework 7 exercises" data-active="1">
+        <span class="seg3d-thumb" aria-hidden="true"></span>
+        <a href="#ex-1" aria-current="page">Ex. 1</a>
+        <a href="#ex-2">Ex. 2</a>
+      </nav>
+    </div>
+
+    <div class="wrap hero">
+      <h1>Modes of Convergence and Bayesian Inference</h1>
+      <p class="lede">How a sequence of random variables can converge, which kind of convergence the Law of Large Numbers and the Central Limit
+        Theorem give and why <span class="math">√n</span> keeps appearing; then conditional probability and Bayes' theorem as the rule that turns
+        a prior and a likelihood into a posterior.</p>
+    </div>
+
+    <div class="lab wrap">
+    <div class="lab-main">
+
+    <!-- Ex. 1 ========================================================== -->
+    <div class="exercise-head" id="ex-1">
+      <p class="ex-label">Exercise 1</p>
+      <p class="ex-title">Modes of Convergence in Probability Theory</p>
+    </div>
+
+    <!-- 01 ------------------------------------------------------------ -->
+    <section class="block" id="modes" data-stage="modes">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">01</span><h2>The four modes of convergence</h2></div>
+        <p class="section-sub">Let <span class="math">X₁, X₂, …</span> and <span class="math">X</span> be random variables on a probability space
+          <span class="math">(Ω, 𝓕, P)</span>. A random variable is a function of the outcome <span class="math">ω ∈ Ω</span>, so “<span class="math">Xₙ</span>
+          tends to <span class="math">X</span>” can mean different things: that the numbers <span class="math">Xₙ(ω)</span> converge for (almost) every
+          <span class="math">ω</span>, that large gaps become unlikely, that the average squared gap vanishes, or only that the distributions get close.</p>
+
+        <div class="grid grid-2 modes">
+          <article class="mode">
+            <h3>Almost sure convergence <span class="mode-tag">Xₙ →<sup>a.s.</sup> X</span></h3>
+            <div class="math-block">P( { ω : Xₙ(ω) → X(ω) as n → ∞ } ) = 1</div>
+            <p>Take one outcome <span class="math">ω</span> and follow the ordinary sequence of numbers <span class="math">X₁(ω), X₂(ω), …</span>: it converges to
+              <span class="math">X(ω)</span>, and this happens for every <span class="math">ω</span> outside a set of probability 0. It is a statement about
+              whole trajectories: from some (random) index on, the path stays as close to the limit as we want and never leaves again.</p>
+          </article>
+          <article class="mode">
+            <h3>Convergence in probability <span class="mode-tag">Xₙ →<sup>P</sup> X</span></h3>
+            <div class="math-block">for every ε &gt; 0:  P( |Xₙ − X| &gt; ε ) → 0</div>
+            <p>At each large <span class="math">n</span>, taken on its own, a deviation larger than <span class="math">ε</span> is unlikely. It says nothing about
+              a single trajectory: the outcomes that deviate at time <span class="math">n</span> can be different from those that deviate at time
+              <span class="math">n + 1</span>, so a given path may still have large deviations infinitely often, as long as they become rarer and rarer.</p>
+          </article>
+          <article class="mode">
+            <h3>Mean-square (L²) convergence <span class="mode-tag">Xₙ →<sup>L²</sup> X</span></h3>
+            <div class="math-block">E[ (Xₙ − X)² ] → 0</div>
+            <p>The average squared distance goes to 0 (it needs <span class="math">E[Xₙ²] &lt; ∞</span>). It controls the size of the deviations, not only their
+              probability: a rare but huge deviation keeps <span class="math">E[(Xₙ − X)²]</span> large. When the limit is a constant <span class="math">θ</span>,
+              <span class="math">E[(Xₙ − θ)²] = Var(Xₙ) + (E[Xₙ] − θ)²</span>, so L² convergence means that both the variance and the bias go to 0.</p>
+          </article>
+          <article class="mode">
+            <h3>Convergence in distribution <span class="mode-tag">Xₙ →<sup>d</sup> X</span></h3>
+            <div class="math-block">Fₙ(x) = P(Xₙ ≤ x) → F(x) = P(X ≤ x) at every x where F is continuous</div>
+            <p>Only the distribution functions are compared, never the values: <span class="math">Xₙ</span> and <span class="math">X</span> do not even need to be
+              defined on the same space. Equivalently, <span class="math">E[g(Xₙ)] → E[g(X)]</span> for every bounded continuous <span class="math">g</span>. It is
+              what is needed to compute approximate probabilities <span class="math">P(Xₙ ≤ x) ≈ F(x)</span>.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 ------------------------------------------------------------ -->
+    <section class="block" id="relations" data-stage="modes">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">02</span><h2>How the modes are related</h2></div>
+        <p class="section-sub">Almost sure and mean-square convergence each imply convergence in probability, which implies convergence in distribution.
+          None of the arrows can be reversed in general, and neither of the two strongest modes implies the other.</p>
+
+        <figure class="implications">
+          <svg viewBox="0 0 640 190" role="img" aria-label="Almost sure and mean-square convergence imply convergence in probability, which implies convergence in distribution; convergence in distribution to a constant implies convergence in probability.">
+            <defs>
+              <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker>
+            </defs>
+            <g class="node"><rect x="10" y="12" width="170" height="46" rx="10"/><text x="95" y="40">almost sure</text></g>
+            <g class="node"><rect x="10" y="132" width="170" height="46" rx="10"/><text x="95" y="160">mean square (L²)</text></g>
+            <g class="node"><rect x="245" y="72" width="170" height="46" rx="10"/><text x="330" y="100">in probability</text></g>
+            <g class="node"><rect x="460" y="72" width="170" height="46" rx="10"/><text x="545" y="100">in distribution</text></g>
+            <path class="edge" d="M180,40 C215,40 225,82 243,88" marker-end="url(#arr)"/>
+            <path class="edge" d="M180,152 C215,152 225,108 243,102" marker-end="url(#arr)"/>
+            <path class="edge" d="M415,88 L458,88" marker-end="url(#arr)"/>
+            <path class="edge cond" d="M545,118 C545,160 330,160 330,121" marker-end="url(#arr)"/>
+            <text class="note" x="438" y="176">if the limit is a constant</text>
+          </svg>
+        </figure>
+
+        <div class="grid grid-2">
+          <div class="prose">
+            <h3>Why the arrows hold</h3>
+            <ul>
+              <li><strong>L² ⇒ P.</strong> By Chebyshev's (Markov's) inequality, <span class="math">P(|Xₙ − X| &gt; ε) ≤ E[(Xₙ − X)²] / ε²</span>, and the right side
+                goes to 0.</li>
+              <li><strong>a.s. ⇒ P.</strong> If almost every path eventually stays within <span class="math">ε</span>, the probability of being outside at time
+                <span class="math">n</span> goes to 0 (dominated convergence applied to <span class="math">1{|Xₙ − X| &gt; ε}</span>).</li>
+              <li><strong>P ⇒ d.</strong> If <span class="math">Xₙ</span> is close to <span class="math">X</span> with high probability, the two have nearly the
+                same distribution function at every continuity point.</li>
+              <li><strong>d to a constant ⇒ P.</strong> If the limit distribution is a point mass at <span class="math">c</span>, then
+                <span class="math">P(|Xₙ − c| &gt; ε) ≤ Fₙ(c − ε) + 1 − Fₙ(c + ε) → 0 + 1 − 1 = 0</span>.</li>
+            </ul>
+          </div>
+          <div>
+            <p class="chart-title">Why the converses fail</p>
+            <div class="table-wrap">
+              <table class="counter">
+                <thead><tr><th>Does not hold</th><th>Counterexample (U uniform on [0, 1))</th></tr></thead>
+                <tbody>
+                  <tr><td>P ⇏ a.s.<br>L² ⇏ a.s.</td><td>The typewriter sequence below: <span class="math">E[Xₙ²] = P(Xₙ = 1) → 0</span>, but every path takes the
+                    value 1 infinitely often.</td></tr>
+                  <tr><td>a.s. ⇏ L²<br>P ⇏ L²</td><td><span class="math">Xₙ = n · 1{U &lt; 1/n}</span>: for every <span class="math">U &gt; 0</span> it is 0 once
+                    <span class="math">n &gt; 1/U</span>, yet <span class="math">E[Xₙ²] = n² · (1/n) = n → ∞</span>.</td></tr>
+                  <tr><td>d ⇏ P</td><td><span class="math">X ~ N(0, 1)</span>, <span class="math">Xₙ = −X</span>: every <span class="math">Xₙ</span> has exactly
+                    the distribution of <span class="math">X</span>, but <span class="math">|Xₙ − X| = 2|X|</span> does not shrink.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="mt-3">The typewriter sequence: in probability and in L², but not almost surely</h3>
+        <p>Write <span class="math">n = 2ᵏ + j</span> with <span class="math">0 ≤ j &lt; 2ᵏ</span> and let <span class="math">Xₙ = 1</span> when
+          <span class="math">U ∈ [j/2ᵏ, (j + 1)/2ᵏ)</span>, otherwise 0. Within block <span class="math">k</span> an interval of length
+          <span class="math">2⁻ᵏ</span> sweeps <span class="math">[0, 1)</span> from left to right. So
+          <span class="math">P(Xₙ = 1) = E[Xₙ²] = 2⁻ᵏ → 0</span>: convergence to 0 in probability and in L². But each sweep covers every point once, so for any
+          fixed outcome <span class="math">U = ω</span> the path <span class="math">Xₙ(ω)</span> returns to 1 once in every block and has no limit.</p>
+        <div class="controls">
+          <label class="field"><span>Outcome ω = <output id="tw-omega-val">0.300</output></span><input id="tw-omega" type="range" min="0" max="0.999" step="0.001" value="0.3"></label>
+        </div>
+        <div id="tw-chart"></div>
+        <p class="small muted" id="tw-note"></p>
+        <p class="chart-title mt-2">The same sequence for ten outcomes at once: a dot where Xₙ(ω) = 1</p>
+        <div id="tw-raster"></div>
+        <p class="small muted">Each row is one outcome ω (the highlighted one is the ω chosen above). On the log scale every block has the same width, and
+          every row has exactly one dot in each block: no path settles on 0. At a fixed <var>n</var>, instead, only a fraction 2⁻ᵏ of the outcomes has a dot,
+          and that fraction goes to 0.</p>
+
+        <p class="chart-title mt-3">Summary: which modes each sequence satisfies</p>
+        <div class="table-wrap">
+          <table class="modes-summary">
+            <thead><tr><th>Sequence</th><th class="c">a.s.</th><th class="c">L²</th><th class="c">P</th><th class="c">d</th></tr></thead>
+            <tbody>
+              <tr><td>Sample mean <span class="math">X̄ₙ → μ</span>, i.i.d. with <span class="math">σ² &lt; ∞</span></td><td class="c yes">yes</td><td class="c yes">yes</td><td class="c yes">yes</td><td class="c yes">yes</td></tr>
+              <tr><td>Typewriter <span class="math">Xₙ → 0</span></td><td class="c no">no</td><td class="c yes">yes</td><td class="c yes">yes</td><td class="c yes">yes</td></tr>
+              <tr><td><span class="math">Xₙ = n · 1{U &lt; 1/n} → 0</span></td><td class="c yes">yes</td><td class="c no">no</td><td class="c yes">yes</td><td class="c yes">yes</td></tr>
+              <tr><td><span class="math">Xₙ = −X → X</span>, <span class="math">X ~ N(0, 1)</span></td><td class="c no">no</td><td class="c no">no</td><td class="c no">no</td><td class="c yes">yes</td></tr>
+              <tr><td>CLT: <span class="math">Zₙ = √n (X̄ₙ − μ)/σ → Z ~ N(0, 1)</span></td><td class="c no">no</td><td class="c no">no</td><td class="c no">no</td><td class="c yes">yes</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small muted">Every row satisfies convergence in distribution, the weakest mode; the rows differ in which of the stronger modes also hold.</p>
+      </div>
+    </section>
+
+    <!-- 03 ------------------------------------------------------------ -->
+    <section class="block" id="roles" data-stage="modes">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">03</span><h2>Role in the LLN, the CLT and other results</h2></div>
+        <p class="section-sub">Let <span class="math">X₁, X₂, …</span> be independent and identically distributed with mean <span class="math">μ</span> and
+          variance <span class="math">σ²</span>, <span class="math">Sₙ = X₁ + … + Xₙ</span> and <span class="math">X̄ₙ = Sₙ / n</span>.</p>
+
+        <div class="grid grid-3 laws">
+          <article class="mode">
+            <h3>Weak LLN: in probability</h3>
+            <div class="math-block">X̄ₙ →<sup>P</sup> μ</div>
+            <p>The easiest proof goes through L²: <span class="math">E[(X̄ₙ − μ)²] = Var(X̄ₙ) = σ²/n → 0</span>, and Chebyshev gives
+              <span class="math">P(|X̄ₙ − μ| &gt; ε) ≤ σ²/(nε²)</span>. For a large fixed sample, the sample mean is close to <span class="math">μ</span>
+              with high probability.</p>
+          </article>
+          <article class="mode">
+            <h3>Strong LLN: almost surely</h3>
+            <div class="math-block">X̄ₙ →<sup>a.s.</sup> μ</div>
+            <p>Kolmogorov's version only needs <span class="math">E|X₁| &lt; ∞</span>. It is a statement about the single infinite sequence of observations
+              that we actually see: its running mean converges to <span class="math">μ</span>. This justifies reading a probability as a long-run
+              frequency and using simulation averages (Monte Carlo) as estimates.</p>
+          </article>
+          <article class="mode">
+            <h3>CLT: in distribution</h3>
+            <div class="math-block">Zₙ = √n (X̄ₙ − μ) / σ →<sup>d</sup> N(0, 1)</div>
+            <p>Only the distribution converges, and it cannot be more: <span class="math">Zₙ</span> and <span class="math">Z₂ₙ</span> share only half of their
+              terms and have correlation <span class="math">1/√2</span> for every <span class="math">n</span>, so <span class="math">Zₙ</span> never settles on a
+              value. What it gives is <span class="math">P(Zₙ ≤ z) ≈ Φ(z)</span>.</p>
+          </article>
+        </div>
+
+        <p>The LLN and the CLT describe the same sum at two scales. Divided by <span class="math">n</span>, the fluctuations of <span class="math">Sₙ</span>
+          vanish and the limit is the constant <span class="math">μ</span>, reached in the strong modes (a.s., L², P). Divided by <span class="math">√n</span>,
+          the fluctuations stay of fixed size and the limit is a whole distribution, reached only in the weakest mode.</p>
+
+        <p class="chart-title mt-2">Other results of statistics and their mode of convergence</p>
+        <div class="table-wrap">
+          <table class="results">
+            <thead><tr><th>Result</th><th>Statement</th><th>Mode</th></tr></thead>
+            <tbody>
+              <tr><td>Consistency of an estimator</td><td><span class="math">θ̂ₙ → θ</span>, e.g. the sample variance <span class="math">sₙ² → σ²</span>; it is
+                called strong consistency when the convergence is a.s.</td><td>P (a.s.)</td></tr>
+              <tr><td>Mean squared error → 0</td><td><span class="math">MSE(θ̂ₙ) = Var(θ̂ₙ) + bias² → 0</span>; a sufficient condition for consistency</td><td>L²</td></tr>
+              <tr><td>Glivenko–Cantelli</td><td>The empirical distribution function converges to <span class="math">F</span> uniformly:
+                <span class="math">supₓ |F̂ₙ(x) − F(x)| → 0</span></td><td>a.s.</td></tr>
+              <tr><td>Slutsky's theorem</td><td>If <span class="math">Yₙ →<sup>d</sup> Y</span> and <span class="math">Wₙ →<sup>P</sup> c</span>, then
+                <span class="math">Yₙ Wₙ →<sup>d</sup> cY</span>; it allows replacing <span class="math">σ</span> by <span class="math">sₙ</span>:
+                <span class="math">√n (X̄ₙ − μ) / sₙ →<sup>d</sup> N(0, 1)</span></td><td>d and P</td></tr>
+              <tr><td>Delta method</td><td><span class="math">√n (g(X̄ₙ) − g(μ)) →<sup>d</sup> N(0, g′(μ)² σ²)</span></td><td>d</td></tr>
+              <tr><td>Asymptotic normality of the MLE</td><td><span class="math">√n (θ̂ₙ − θ) →<sup>d</sup> N(0, 1/I(θ))</span>, with
+                <span class="math">I(θ)</span> the Fisher information</td><td>d</td></tr>
+              <tr><td>Pearson's chi-square</td><td>Under independence, <span class="math">∑ (nᵢⱼ − Eᵢⱼ)² / Eᵢⱼ →<sup>d</sup> χ²</span> with
+                <span class="math">(r − 1)(c − 1)</span> degrees of freedom</td><td>d</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 ------------------------------------------------------------ -->
+    <section class="block" id="sqrt-n" data-stage="sqrt">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">04</span><h2>Why √n: additivity of variance and independence</h2></div>
+        <p class="section-sub">The variance of a sum is the sum of all the variances and covariances:</p>
+        <div class="math-block">Var(Sₙ) = ∑ᵢ Var(Xᵢ) + 2 ∑_{i&lt;j} Cov(Xᵢ, Xⱼ)</div>
+        <p>When the <span class="math">Xᵢ</span> are independent (being uncorrelated is already enough) every covariance is 0 and the variance is
+          <strong>additive</strong>: <span class="math">Var(Sₙ) = nσ²</span>. The standard deviation, which is in the units of the data, is the square root:
+          <span class="math">SD(Sₙ) = σ√n</span>. The typical size of the fluctuations of a sum of <span class="math">n</span> terms is <span class="math">√n</span>,
+          not <span class="math">n</span>, because independent errors partly cancel. Dividing by <span class="math">nᵃ</span> gives</p>
+        <div class="math-block">Var(Sₙ / nᵃ) = σ² n^(1 − 2a)</div>
+        <div class="tiles mt-2 scale-tiles">
+          <div class="tile"><div class="t-label">a = 0: total Sₙ</div><div class="t-value">nσ² → ∞</div><div class="t-sub">spreads out, no limit</div></div>
+          <div class="tile"><div class="t-label">a = 1: mean Sₙ/n</div><div class="t-value">σ²/n → 0</div><div class="t-sub">collapses on μ (LLN)</div></div>
+          <div class="tile"><div class="t-label">a = 1/2: Sₙ/√n</div><div class="t-value">σ²</div><div class="t-sub">stays fixed, limit N(0, σ²) (CLT)</div></div>
+        </div>
+        <p><span class="math">√n</span> is the only scaling that keeps the variance finite and positive, which is why it is the scaling of the CLT
+          (after centring: <span class="math">(Sₙ − nμ)/√n</span>). The same fact gives the rate of the LLN: <span class="math">X̄ₙ − μ</span> is of order
+          <span class="math">σ/√n</span>.</p>
+
+        <p>The picture below shows it on simulated paths. Each line is one sequence of independent ±1 steps (σ = 1, μ = 0), divided by
+          <span class="math">nᵃ</span>; the band is <span class="math">±1.96 σ n^(1/2 − a)</span>, the interval that holds about 95% of the paths at each
+          <var>n</var>.</p>
+        <div class="controls">
+          <div class="field"><span class="field-label">Exponent a in Sₙ / nᵃ</span>
+            <div class="segmented" role="group" aria-label="Exponent" id="alpha">
+              <button type="button" data-alpha="0" aria-pressed="false">0</button>
+              <button type="button" data-alpha="0.25" aria-pressed="false">1/4</button>
+              <button type="button" data-alpha="0.5" aria-pressed="true">1/2</button>
+              <button type="button" data-alpha="0.75" aria-pressed="false">3/4</button>
+              <button type="button" data-alpha="1" aria-pressed="false">1</button>
+            </div>
+          </div>
+          <button class="btn" type="button" id="paths-run">New paths</button>
+        </div>
+        <div id="paths-chart"></div>
+        <p class="small muted" id="paths-note"></p>
+
+        <h3 class="mt-3">The role of independence</h3>
+        <p>Without independence the covariances stay in the sum. If every pair has correlation <span class="math">ρ</span>,</p>
+        <div class="math-block">Var(Sₙ) = nσ² + n(n − 1)ρσ²,   Var(X̄ₙ) = σ²/n + (1 − 1/n)ρσ² → ρσ²</div>
+        <p>With <span class="math">ρ &gt; 0</span> the variance of the mean does not go to 0 and the LLN fails: new observations repeat part of what the
+          previous ones said (for example, <var>n</var> systems running the same software tend to fail together), so the sample behaves like only about
+          <span class="math">1/ρ</span> independent ones. The scaling <span class="math">√n</span> is no longer the right one either.</p>
+        <div class="controls">
+          <div class="field"><span class="field-label">Correlation between pairs ρ</span>
+            <div class="segmented" role="group" aria-label="Correlation" id="rho">
+              <button type="button" data-rho="0" aria-pressed="true">0</button>
+              <button type="button" data-rho="0.001" aria-pressed="false">0.001</button>
+              <button type="button" data-rho="0.01" aria-pressed="false">0.01</button>
+              <button type="button" data-rho="0.1" aria-pressed="false">0.1</button>
+            </div>
+          </div>
+        </div>
+        <p class="chart-title">Variance of the three normalizations, σ² = 1 (dashed: independent case)</p>
+        <div id="var-chart"></div>
+        <p class="small muted" id="var-note"></p>
+        <p>Additivity also needs finite variances: for Cauchy observations <span class="math">X̄ₙ</span> has the same Cauchy distribution as a single
+          <span class="math">X₁</span> for every <span class="math">n</span>, and neither the LLN nor the <span class="math">√n</span> rate holds.</p>
+
+        <h3 class="mt-3">√n in statistical inference</h3>
+        <div class="grid grid-2">
+          <div class="prose">
+            <ul>
+              <li><strong>Standard error.</strong> The precision of the sample mean is <span class="math">SE(X̄ₙ) = σ/√n</span>, estimated by
+                <span class="math">sₙ/√n</span>.</li>
+              <li><strong>Confidence intervals.</strong> By the CLT and Slutsky, <span class="math">X̄ₙ ± 1.96 · sₙ/√n</span> covers <span class="math">μ</span>
+                with probability close to 95%.</li>
+              <li><strong>Tests.</strong> The z and t statistics <span class="math">√n (X̄ₙ − μ₀) / sₙ</span> compare the observed distance with its standard error.</li>
+            </ul>
+          </div>
+          <div class="prose">
+            <ul>
+              <li><strong>Sample size.</strong> Precision grows only like <span class="math">√n</span>: halving the width of an interval needs four times as many
+                observations, one more decimal digit needs a hundred times as many.</li>
+              <li><strong>√n-consistent estimators.</strong> Most regular estimators (sample means, moment estimators, maximum likelihood) satisfy
+                <span class="math">√n (θ̂ₙ − θ) →<sup>d</sup> N(0, v)</span>: their error shrinks at the rate <span class="math">1/√n</span>.</li>
+              <li><strong>Independence assumed.</strong> All these formulas use <span class="math">Var(Sₙ) = nσ²</span>; with correlated data (time series,
+                clustered samples) the standard errors computed this way are too small.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ex. 2 ========================================================== -->
+    <div class="exercise-head" id="ex-2">
+      <p class="ex-label">Exercise 2</p>
+      <p class="ex-title">Conditional Probability, Bayes' Theorem and Statistical Inference</p>
+    </div>
+
+    <!-- 05 ------------------------------------------------------------ -->
+    <section class="block" id="conditional" data-stage="bayes">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">05</span><h2>Conditional probability</h2></div>
+        <p class="section-sub">For two events with <span class="math">P(B) &gt; 0</span>, the probability of <var>A</var> given <var>B</var> is</p>
+        <div class="math-block">P(A | B) = P(A ∩ B) / P(B)</div>
+        <p>Knowing that <var>B</var> happened shrinks the sample space to <var>B</var>; the probabilities inside it are rescaled so that they add up to 1
+          again. Two rules follow directly:</p>
+        <div class="grid grid-2">
+          <div>
+            <p class="chart-title">Product rule</p>
+            <div class="math-block">P(A ∩ B) = P(A | B) P(B) = P(B | A) P(A)</div>
+          </div>
+          <div>
+            <p class="chart-title">Law of total probability (H₁, …, Hₖ a partition of Ω)</p>
+            <div class="math-block">P(B) = ∑ⱼ P(B | Hⱼ) P(Hⱼ)</div>
+          </div>
+        </div>
+        <div class="grid grid-2 mt-2">
+          <div class="prose">
+            <h3>In probability theory</h3>
+            <p>Conditioning is how information enters a model. It defines conditional distributions and the conditional expectation
+              <span class="math">E[X | Y]</span>, it expresses independence (<span class="math">P(A | B) = P(A)</span>), and it builds joint models step by step,
+              as in Markov chains, where the next state depends only on the current one. In general <span class="math">P(A | B) ≠ P(B | A)</span>:
+              confusing the two is a common mistake, and Bayes' theorem is the rule that links them.</p>
+          </div>
+          <div class="prose">
+            <h3>In statistics</h3>
+            <p>Data <var>x</var> are modelled by a distribution <span class="math">f(x | θ)</span> that depends on an unknown parameter <span class="math">θ</span>.
+              Frequentist inference treats <span class="math">θ</span> as fixed and reasons with probabilities conditional on it: a p-value is
+              <span class="math">P(T ≥ t | H₀)</span>, a confidence level is a probability over repeated samples for a given <span class="math">θ</span>. Bayesian
+              inference treats <span class="math">θ</span> as a random variable and conditions the other way round, on the observed data:
+              <span class="math">P(θ | x)</span>. The two answers are different questions.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 ------------------------------------------------------------ -->
+    <section class="block" id="bayes" data-stage="bayes">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">06</span><h2>Bayes' theorem: prior, likelihood and posterior</h2></div>
+        <p class="section-sub">Writing the product rule both ways and dividing by <span class="math">P(B)</span>, then expanding <span class="math">P(B)</span>
+          with the law of total probability:</p>
+        <div class="math-block">P(Hᵢ | D) = P(D | Hᵢ) P(Hᵢ) / ∑ⱼ P(D | Hⱼ) P(Hⱼ)</div>
+        <p>For a continuous parameter <span class="math">θ</span> with density <span class="math">π(θ)</span> and data <var>x</var>:</p>
+        <div class="math-block">π(θ | x) = f(x | θ) π(θ) / ∫ f(x | θ′) π(θ′) dθ′   ∝   likelihood × prior</div>
+
+        <div class="grid grid-3 laws">
+          <article class="mode">
+            <h3>Prior <span class="mode-tag">π(θ)</span></h3>
+            <p>What is known or assumed about <span class="math">θ</span> before seeing the data: earlier studies, expert knowledge, physical constraints, or a
+              deliberately vague distribution when little is known. It is a probability distribution over the possible values of <span class="math">θ</span>.</p>
+          </article>
+          <article class="mode">
+            <h3>Likelihood <span class="mode-tag">L(θ) = f(x | θ)</span></h3>
+            <p>The model of the data read the other way: <var>x</var> is fixed at what was observed and <span class="math">θ</span> varies. It measures how well
+              each value of <span class="math">θ</span> explains the data. It is <em>not</em> a distribution over <span class="math">θ</span> and need not integrate
+              to 1; only its shape matters, since constant factors cancel.</p>
+          </article>
+          <article class="mode">
+            <h3>Posterior <span class="mode-tag">π(θ | x)</span></h3>
+            <p>The distribution of <span class="math">θ</span> after the data: the prior reweighted by the likelihood and normalized by the evidence
+              <span class="math">∫ f(x | θ) π(θ) dθ</span>. Values that are both plausible a priori and good at explaining the data get high posterior
+              probability.</p>
+          </article>
+        </div>
+
+        <div class="grid grid-2 mt-2">
+          <div class="prose">
+            <h3>How the theorem produces the posterior</h3>
+            <ol>
+              <li>Choose the prior <span class="math">π(θ)</span> and the model <span class="math">f(x | θ)</span>.</li>
+              <li>Observe <var>x</var> and form the likelihood <span class="math">L(θ) = f(x | θ)</span>.</li>
+              <li>Multiply pointwise: <span class="math">L(θ) π(θ)</span> is the joint probability of <span class="math">θ</span> and the observed data.</li>
+              <li>Divide by its total, the evidence, so that the result is a distribution again.</li>
+            </ol>
+            <p>In odds form, for two hypotheses: posterior odds = prior odds × likelihood ratio,
+              <span class="math">P(H₁|D)/P(H₀|D) = [P(H₁)/P(H₀)] · [P(D|H₁)/P(D|H₀)]</span>.</p>
+          </div>
+          <div class="prose">
+            <h3>Why updating is central to Bayesian inference</h3>
+            <ul>
+              <li><strong>The posterior is the whole answer.</strong> Point estimates (posterior mean, mode), credible intervals with
+                <span class="math">P(θ ∈ [l, u] | x) = 0.95</span>, probabilities of hypotheses and predictions of new data are all read from it.</li>
+              <li><strong>Learning is sequential.</strong> Today's posterior is tomorrow's prior: updating with <span class="math">x₁</span> and then with
+                <span class="math">x₂</span> gives the same result as updating once with both (for conditionally independent data), so evidence accumulates
+                coherently.</li>
+              <li><strong>Data eventually dominate.</strong> As <var>n</var> grows the likelihood becomes sharper while the prior stays the same; the posterior
+                concentrates around the true value with a spread of order <span class="math">1/√n</span> (Bernstein–von Mises), whatever the prior, as long as the
+                prior does not exclude the true value.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 ------------------------------------------------------------ -->
+    <section class="block" id="alarm" data-stage="alarm">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">07</span><h2>Example: is an IDS alarm a real attack?</h2></div>
+        <p class="section-sub">For example, take an intrusion detection system that raises an alarm on 99% of attacks and, by mistake, on 5% of normal events.
+          The hypotheses are <var>attack</var> and <var>no attack</var>; the prior is the base rate, the share of events that are attacks; the likelihoods are
+          <span class="math">P(alarm | attack)</span>, the sensitivity, and <span class="math">P(alarm | no attack)</span>, the false-positive rate.</p>
+        <div class="math-block">P(attack | alarm) = P(alarm | attack) P(attack) / [ P(alarm | attack) P(attack) + P(alarm | no attack) P(no attack) ]</div>
+        <div class="controls">
+          <div class="field"><span class="field-label">Prior: base rate P(attack)</span>
+            <div class="segmented" role="group" aria-label="Base rate" id="base">
+              <button type="button" data-base="0.001" aria-pressed="false">0.1%</button>
+              <button type="button" data-base="0.01" aria-pressed="true">1%</button>
+              <button type="button" data-base="0.1" aria-pressed="false">10%</button>
+              <button type="button" data-base="0.5" aria-pressed="false">50%</button>
+            </div>
+          </div>
+          <label class="field"><span>Sensitivity = <output id="sens-val">99.0%</output></span><input id="sens" type="range" min="0.5" max="0.999" step="0.001" value="0.99"></label>
+          <label class="field"><span>False-positive rate = <output id="fpr-val">5.0%</output></span><input id="fpr" type="range" min="0.001" max="0.3" step="0.001" value="0.05"></label>
+        </div>
+        <div class="grid grid-2">
+          <div>
+            <p class="chart-title">The same numbers as counts, out of 100,000 events</p>
+            <div class="table-wrap"><table id="t-alarm" class="cross"></table></div>
+            <p class="small muted" id="alarm-read"></p>
+          </div>
+          <div>
+            <p class="chart-title">Sequential updating: each posterior is the prior of the next alarm</p>
+            <div id="alarm-chart"></div>
+          </div>
+        </div>
+        <div class="tiles mt-2" id="alarm-tiles"></div>
+        <p id="alarm-text"></p>
+        <p class="chart-title mt-2">P(attack | alarm) as a function of the prior, for the sensitivity and false-positive rate above</p>
+        <div id="prior-chart"></div>
+        <p class="small muted">With the same likelihoods, the posterior after one alarm ranges from almost 0 to almost 1 depending only on the prior; the
+          dot marks the base rate selected above.</p>
+      </div>
+    </section>
+
+    <!-- 08 ------------------------------------------------------------ -->
+    <section class="block" id="beta" data-stage="beta">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">08</span><h2>Example: estimating a proportion with a Beta prior</h2></div>
+        <p class="section-sub">For example, a company sends a simulated phishing e-mail to <var>n</var> employees and <var>k</var> of them click the link. The
+          unknown parameter is <span class="math">θ</span>, the probability that an employee clicks.</p>
+        <div class="grid grid-3 laws">
+          <article class="mode">
+            <h3>Prior</h3>
+            <div class="math-block">θ ~ Beta(a, b)</div>
+            <p class="small">density <span class="math">∝ θ^(a−1) (1 − θ)^(b−1)</span>, mean <span class="math">a/(a + b)</span></p>
+          </article>
+          <article class="mode">
+            <h3>Likelihood</h3>
+            <div class="math-block">L(θ) = C(n, k) θᵏ (1 − θ)ⁿ⁻ᵏ</div>
+            <p class="small">binomial model, maximized at <span class="math">θ̂ = k/n</span></p>
+          </article>
+          <article class="mode">
+            <h3>Posterior</h3>
+            <div class="math-block">θ | k ~ Beta(a + k, b + n − k)</div>
+            <p class="small">same family as the prior (conjugate prior)</p>
+          </article>
+        </div>
+        <p>The posterior mean is a weighted average of the prior mean and the observed proportion:</p>
+        <div class="math-block">E[θ | k] = w · a/(a + b) + (1 − w) · k/n,   w = (a + b)/(a + b + n)</div>
+        <p>so the prior counts as <span class="math">a + b</span> earlier observations, <span class="math">a</span> clicks and <span class="math">b</span>
+          non-clicks.</p>
+
+        <div class="controls">
+          <div class="field"><span class="field-label">Prior</span>
+            <div class="segmented" role="group" aria-label="Prior" id="prior">
+              <button type="button" data-prior="flat" aria-pressed="false">Flat</button>
+              <button type="button" data-prior="past" aria-pressed="true">Past campaigns</button>
+              <button type="button" data-prior="strong" aria-pressed="false">Strong, far off</button>
+            </div>
+          </div>
+          <label class="field"><span>Employees n</span><select id="b-n"></select></label>
+          <label class="field"><span>Clicks k = <output id="b-k-val">12</output></span><input id="b-k" type="range" min="0" max="50" step="1" value="12"></label>
+        </div>
+        <div id="beta-chart"></div>
+        <p class="small muted">The likelihood is rescaled to area 1 so that it can be drawn on the same axis as the two densities.</p>
+        <div class="tiles mt-2" id="beta-tiles"></div>
+
+        <p class="chart-title mt-2">The same data under the three priors</p>
+        <div class="table-wrap"><table id="t-priors" class="results"></table></div>
+        <p class="small muted" id="beta-read"></p>
+
+        <p class="chart-title mt-2" id="t-growth-title">Posterior mean when the observed proportion stays the same and n grows</p>
+        <div class="table-wrap"><table id="t-growth" class="results growth"></table></div>
+        <p class="small muted">The prior's weight <span class="math">w = (a + b)/(a + b + n)</span> shrinks as <var>n</var> grows, so the three
+          posterior means move towards <span class="math">k/n</span> and towards each other; the strongest prior is the last to get there.</p>
+
+        <h3 class="mt-3">Updating one e-mail at a time</h3>
+        <p>The same conclusion reached sequentially. The e-mails arrive one by one, each clicked with a true probability <span class="math">θ</span> equal to the
+          observed proportion above; after each one, each analyst's posterior becomes their prior for the next e-mail, so that after <var>t</var> e-mails it is
+          <span class="math">Beta(a + kₜ, b + t − kₜ)</span>.</p>
+        <div class="controls">
+          <button class="btn" type="button" id="seq-run">New sequence</button>
+        </div>
+        <div id="seq-chart"></div>
+        <p class="small muted" id="seq-note"></p>
+      </div>
+    </section>
+
+    <!-- 09 ------------------------------------------------------------ -->
+    <section class="block" id="discussion" data-stage="beta">
+      <div class="wrap">
+        <div class="section-head"><span class="section-num">09</span><h2>Applications, advantages, limitations and influence on conclusions</h2></div>
+        <div class="grid grid-3 laws">
+          <div class="prose">
+            <h3>Applications</h3>
+            <ul>
+              <li>Diagnostic decisions with a known base rate: alarms, medical tests, fraud and spam filters (naive Bayes is this update with many
+                features).</li>
+              <li>Estimating rates from few data, borrowing strength from earlier campaigns, similar systems or experts.</li>
+              <li>Sequential monitoring, where the estimate is updated as each new observation arrives.</li>
+            </ul>
+          </div>
+          <div class="prose">
+            <h3>Advantages</h3>
+            <ul>
+              <li>Prior knowledge enters explicitly and transparently instead of being ignored.</li>
+              <li>Direct answers: “θ is in [l, u] with probability 95%”, “P(attack | alarm) = 17%”.</li>
+              <li>Works with small samples, where a flat estimate such as <span class="math">k/n = 0/5</span> would be extreme.</li>
+              <li>Coherent sequential updating; uncertainty about <span class="math">θ</span> carries over to predictions.</li>
+            </ul>
+          </div>
+          <div class="prose">
+            <h3>Limitations</h3>
+            <ul>
+              <li>The prior is a choice, and different analysts can reach different conclusions from the same data.</li>
+              <li>A prior that is confident and wrong needs many data to be corrected; a prior that gives probability 0 to a value can never be corrected.</li>
+              <li>The likelihood depends on the model: if <span class="math">f(x | θ)</span> is wrong (e.g. alarms that are not independent), the posterior is
+                wrong too.</li>
+              <li>Outside conjugate cases the evidence integral has no closed form and needs numerical methods such as MCMC.</li>
+            </ul>
+          </div>
+        </div>
+        <h3 class="mt-3">Influence on the conclusions</h3>
+        <p id="influence"></p>
+        <p>To check how much a conclusion depends on the prior, the analysis can be repeated with several reasonable priors, as in the table of section 08:
+          when they agree, the data speak for themselves; when they disagree, more data are needed or the choice of prior has to be justified.</p>
+      </div>
+    </section>
+
+    </div>
+
+    <aside class="stage" aria-label="Current values">
+      <p class="stage-title">Current values</p>
+      <div class="stage-block">
+        <p class="stage-group">Ex. 1 · Sum of n terms</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="modes sqrt"><span class="stage-label">Typewriter ω</span><code class="stage-value" data-stage-value="omega">–</code></li>
+            <li class="stage-node" data-for="sqrt"><span class="stage-label">Correlation ρ</span><code class="stage-value" data-stage-value="rho">–</code></li>
+            <li class="stage-node" data-for="sqrt"><span class="stage-label">Var(X̄ₙ), n = 10⁴</span><code class="stage-value" data-stage-value="varmean">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+      <div class="stage-block">
+        <p class="stage-group">Ex. 2 · Bayesian updates</p>
+        <div class="stage-fold"><div>
+          <ol class="stage-chain">
+            <li class="stage-node" data-for="bayes alarm"><span class="stage-label">P(attack)</span><code class="stage-value" data-stage-value="prior">–</code></li>
+            <li class="stage-node" data-for="bayes alarm"><span class="stage-label">P(attack | alarm)</span><code class="stage-value" data-stage-value="post">–</code></li>
+            <li class="stage-node gap" data-for="beta"><span class="stage-label">Data k / n</span><code class="stage-value" data-stage-value="data">–</code></li>
+            <li class="stage-node" data-for="beta"><span class="stage-label">Posterior of θ</span><code class="stage-value" data-stage-value="theta">–</code></li>
+          </ol>
+        </div></div>
+      </div>
+    </aside>
+    </div>
+  </main>
+
+  <site-footer></site-footer>
+  <template id="assignment">
+    <h3>Modes of Convergence in Probability Theory</h3>
+    <p>Explain the differences between the main modes of convergence used in probability theory and discuss their respective roles in the Law of Large Numbers (LLN) and the Central Limit Theorem (CLT). For instance</p>
+    <ul>
+      <li>Convergence in probability</li>
+      <li>Almost sure convergence (a.s.)</li>
+      <li>Mean-square convergence (quadratic mean or L²)</li>
+      <li>Convergence in distribution</li>
+    </ul>
+    <p>indicating their role in LLM and CLT (or other important results in satistics).</p>
+    <p>Discuss why the term √n frequently appears in convergence theorems, particularly in relation to the additivity of variance under suitable conditions and the role of independence, both in probability theory and statistical inference.</p>
+    <h3>Conditional Probability, Bayes' Theorem and Statistical Inference</h3>
+    <p>Conditional probability in both probability theory and statistics and Bayes' Theorem. Understand the role and relationship between the 3 fundamental components of Bayesian inference: Prior probability,Likelihood, Posterior probability. Explain how Bayes' Theorem obtain posterior probabilities, and why this updating process plays a central role in a part of (Bayesian) statistical inference. Do some examples of the use of prior probabilities and likelihood functions, discussing their applications, advantages and limitations and their influence on statistical conclusions.</p>
+  </template>
+</body>
+</html>

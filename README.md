@@ -14,6 +14,7 @@ Interactive homework pages for the **Statistics** course: cryptographic primitiv
 | Homework 5 · Ex. 1 | [Riemann and Lebesgue Integration](https://edoconfo.github.io/statistics-homeworks/homework-5/ex-1/) | Midpoint Riemann sums (partition of the domain) and Lebesgue sums (partition of the range, measure of each superlevel set found by bisection) for sin x, x², two step functions, \|x − 0.5\|, 1/√x and sin x / x. Strips-and-slabs picture, errors and observed orders, evaluation counts and timings, agreement of the two limits, and the Dirichlet and Thomae functions. |
 | Homework 5 · Ex. 2 | [Numerical Computation of the Normal CDF](https://edoconfo.github.io/statistics-homeworks/homework-5/ex-2/) | Liouville's theorem and why Φ has no elementary formula, Φ through erf, and Φ computed by trapezoid, Simpson, two power series, Laplace's continued fraction and the A&S erf approximation. A positive-term series plus continued fraction reaches double precision everywhere; checked against Wikipedia's 68–95–99.7 table and mpmath, with error and timing comparisons. |
 | Homework 6 | [Statistical Independence](https://edoconfo.github.io/statistics-homeworks/homework-6/) | A simulated log of intrusion attempts with two categorical variables, the targeted service and the outcome. Contingency table built from the raw records, joint, marginal and conditional frequencies, expected frequencies under independence, Pearson's χ² with its p-value and critical value, independence in probability and in statistics, and association vs causality. |
+| Homework 7 | [Modes of Convergence and Bayesian Inference](https://edoconfo.github.io/statistics-homeworks/homework-7/) | Almost sure, in probability, mean-square and in-distribution convergence, how they imply each other and the counterexamples (typewriter sequence), their role in the weak and strong LLN, the CLT and other results. Why √n appears: additivity of the variance under independence and what correlation changes, and √n in standard errors and confidence intervals. Conditional probability, Bayes' theorem with prior, likelihood and posterior, an IDS alarm with different base rates and a Beta prior for a click rate with a binomial likelihood. |
 
 ## Structure
 
@@ -54,6 +55,10 @@ homework-5/
 homework-6/
   independence.js           contingency table, relative and conditional frequencies, expected counts, χ² and p-value, simulated log
   app.js                    page sections
+homework-7/
+  convergence.js            typewriter sequence, variance of a sum of equicorrelated terms
+  bayes.js                  discrete posterior, IDS alarm updates, Beta density, CDF and quantile, conjugate update
+  app.js                    page sections
 tests/                      node:test suites with known-answer vectors
 ```
 
@@ -66,7 +71,7 @@ Node uses the same versions from `node_modules`.
 
 ```bash
 npm install          # only needed for the Part 2 tests
-npm test             # 63 tests: toy curve, statistics toolkit, wallet vectors, Caesar, toy EC-ElGamal and attacks, random walks, Welford, integrals, normal CDF, independence
+npm test             # 67 tests: toy curve, statistics toolkit, wallet vectors, Caesar, toy EC-ElGamal and attacks, random walks, Welford, integrals, normal CDF, independence, Bayes and convergence
 npm run hw1 -- 6     # prints G, 2G, ..., 6G and the toy public key
 npm run serve        # http://localhost:8000
 ```
