@@ -36,7 +36,7 @@
       '<nav class="nav" aria-label="Main">' +
         '<span class="header-author">' + AUTHOR + '</span>' +
         '<a class="icon-btn" href="' + REPO + '" aria-label="Source on GitHub" title="Source on GitHub">' + GITHUB_ICON + '</a>' +
-        '<button class="theme-toggle" type="button" aria-label="Toggle theme"></button>' +
+        (window.hwTheme ? window.hwTheme.button() : '<button class="theme-toggle" type="button" aria-label="Toggle theme"></button>') +
       '</nav>' +
     '</div></header>';
   }
@@ -62,7 +62,7 @@
 
   // Section rail: one dash per <section id> with an <h2> in <main>, or per element marked
   // data-rail="Label" when the page has any; hovering it reveals the names.
-  document.addEventListener('DOMContentLoaded', function () {
+  onParsed(function () {   // as soon as the HTML is parsed, not after the page's scripts: no late pop-in
     var marked = document.querySelectorAll('main [data-rail][id]');
     var sections = marked.length ? Array.prototype.slice.call(marked) : Array.prototype.filter.call(
       document.querySelectorAll('main section[id]'),
@@ -132,11 +132,24 @@
   // When the tab's links are anchors (#id) the parts are sections of the same page: the tab scrolls to them and follows the scroll.
 
   // a part reached by switching slides in from the side it came from (set before the page is painted)
+  // The content stays hidden (.part-enter-pending) until the page's own scripts have built it, then slides in:
+  // animating while those scripts run would drop most of the frames.
   try {
     var entering = sessionStorage.getItem('part-enter');
     if (entering) {
       sessionStorage.removeItem('part-enter');
-      document.documentElement.classList.add('part-enter-' + entering);
+      var html = document.documentElement, started = false;
+      html.classList.add('part-enter-pending');
+      var start = function () {
+        if (started) return;
+        started = true;
+        requestAnimationFrame(function () {
+          html.classList.remove('part-enter-pending');
+          html.classList.add('part-enter-' + entering);
+        });
+      };
+      document.addEventListener('DOMContentLoaded', function () { setTimeout(start, 0); });
+      setTimeout(start, 1200);   // a slow network never leaves the page blank
     }
   } catch (e) { /* storage unavailable: no entry animation */ }
 
@@ -259,7 +272,21 @@
     try { sessionStorage.setItem('part-enter', forward ? 'from-right' : 'from-left'); } catch (e) { /* no entry animation */ }
     document.documentElement.classList.remove('part-enter-from-left', 'part-enter-from-right');
     document.documentElement.classList.add(forward ? 'part-leave-left' : 'part-leave-right');
-    setTimeout(function () { window.location.href = a.href; }, 300);
+    setTimeout(function () { window.location.href = a.href; }, 160);
+  }
+
+  /** Fetch the other parts in the background once the page is idle, so switching opens them from the cache. */
+  function prefetchParts() {
+    var go = function () {
+      part.links.forEach(function (l) {
+        if (l.getAttribute('aria-current') === 'page') return;
+        var link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = l.href;
+        document.head.appendChild(link);
+      });
+    };
+    if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 2000 }); else setTimeout(go, 1000);
   }
 
   function step(dir) {
@@ -293,6 +320,7 @@
     shape(bar, seg);
     layoutPart();
     if (part.inPage) followScroll();
+    else prefetchParts();
 
     var ticking = false;
     window.addEventListener('scroll', function () {
@@ -362,7 +390,7 @@
   // coming back with the browser's back button restores the page from cache: undo the exit and put the thumb back
   window.addEventListener('pageshow', function (e) {
     if (!e.persisted || !part || part.inPage) return;
-    document.documentElement.classList.remove('part-leave-left', 'part-leave-right', 'part-enter-from-left', 'part-enter-from-right');
+    document.documentElement.classList.remove('part-leave-left', 'part-leave-right', 'part-enter-pending', 'part-enter-from-left', 'part-enter-from-right');
     var here = part.links.findIndex(function (l) { return l.href === window.location.href.split('#')[0]; });
     if (here < 0) return;
     part.seg.setAttribute('data-active', String(here + 1));
@@ -438,7 +466,7 @@
   });
 
   // Assignment drawer: a page that holds <template id="assignment"> gets a side tab that slides the text in.
-  document.addEventListener('DOMContentLoaded', function () {
+  onParsed(function () {   // as soon as the HTML is parsed, not after the page's scripts: no late pop-in
     var tpl = document.getElementById('assignment');
     if (!tpl) return;
 

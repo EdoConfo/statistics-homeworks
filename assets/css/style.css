@@ -177,9 +177,7 @@ var { font-style: italic; font-family: Georgia, "Times New Roman", serif; }
 
 .site-header {
   position: sticky; top: 0; z-index: 20;
-  background: color-mix(in srgb, var(--page) 85%, transparent);
-  backdrop-filter: saturate(1.4) blur(10px);
-  -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  background: var(--page);   /* solid, no backdrop blur: the blur repainted on every scroll frame and stuttered on weaker GPUs */
   border-bottom: 1px solid var(--border);
 }
 .site-header .wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px; height: 56px; }
@@ -447,14 +445,13 @@ html:has(.part-bar) { scroll-padding-top: 104px; }
 
 .part-glass {
   position: absolute; top: 0; left: 0; z-index: -1; width: 100%; height: 132px; pointer-events: none;
-  /* the header's glass, a little denser: the tab often hangs over dark blocks, which would tint it grey */
-  background: color-mix(in srgb, var(--page) 93%, transparent);
-  backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  /* one solid surface for the header and the tab, cut to their shared outline */
+  background: var(--page);
 }
 .part-shape { position: absolute; top: 0; left: 0; width: 100%; height: 64px; overflow: visible; pointer-events: none; }
 .part-shape .line { fill: none; stroke: var(--border); stroke-width: 1; }
 /* before layout.js has drawn the shape: a plain tab under the header's own line */
-.part-bar:not(.shaped) .seg3d { background: color-mix(in srgb, var(--page) 85%, transparent); border: 1px solid var(--border); border-top: 0; border-radius: 0 0 16px 16px; }
+.part-bar:not(.shaped) .seg3d { background: var(--page); border: 1px solid var(--border); border-top: 0; border-radius: 0 0 16px 16px; }
 
 .seg3d {
   --thumb-top: #ffffff; --thumb-bottom: #f4f4f1;
@@ -497,14 +494,18 @@ html:has(.part-bar) { scroll-padding-top: 104px; }
 :root[data-theme="dark"] .seg3d { --thumb-top: #43433f; --thumb-bottom: #353532; --thumb-shadow: 0 1px 1px rgba(0, 0, 0, .4), 0 3px 10px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .1); }
 
 /* changing part: the page slides out towards the swipe and the next part slides in from the other side */
-html.part-leave-left main > :not(.part-bar) { animation: part-out-left .3s cubic-bezier(.4, 0, .9, .6) both; }
-html.part-leave-right main > :not(.part-bar) { animation: part-out-right .3s cubic-bezier(.4, 0, .9, .6) both; }
-html.part-enter-from-right main > :not(.part-bar) { animation: part-in-right .45s cubic-bezier(.15, .8, .25, 1) both; }
-html.part-enter-from-left main > :not(.part-bar) { animation: part-in-left .45s cubic-bezier(.15, .8, .25, 1) both; }
-@keyframes part-out-left { to { transform: translateX(-64px); opacity: 0; } }
-@keyframes part-out-right { to { transform: translateX(64px); opacity: 0; } }
-@keyframes part-in-right { from { transform: translateX(64px); opacity: 0; } }
-@keyframes part-in-left { from { transform: translateX(-64px); opacity: 0; } }
+html.part-leave-left main > :not(.part-bar) { animation: part-out-left .16s cubic-bezier(.4, 0, 1, 1) both; }
+html.part-leave-right main > :not(.part-bar) { animation: part-out-right .16s cubic-bezier(.4, 0, 1, 1) both; }
+html.part-enter-pending main > :not(.part-bar) { opacity: 0; }
+/* the sliding content must not reach past the window's edge: a horizontal scrollbar would show up for the length of the
+   slide, shorten the window and make everything centred on it (the Assignment tab, the rail) jump up and back down */
+html:is(.part-leave-left, .part-leave-right, .part-enter-pending, .part-enter-from-left, .part-enter-from-right) main { overflow-x: clip; }
+html.part-enter-from-right main > :not(.part-bar) { animation: part-in-right .28s cubic-bezier(.2, .8, .2, 1) both; }
+html.part-enter-from-left main > :not(.part-bar) { animation: part-in-left .28s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes part-out-left { to { transform: translate3d(-40px, 0, 0); opacity: 0; } }
+@keyframes part-out-right { to { transform: translate3d(40px, 0, 0); opacity: 0; } }
+@keyframes part-in-right { from { transform: translate3d(40px, 0, 0); opacity: 0; } }
+@keyframes part-in-left { from { transform: translate3d(-40px, 0, 0); opacity: 0; } }
 
 /* ---------- stage: a panel of current values that follows the reading (layout.js highlights it) ----------
    <div class="lab wrap"><div class="lab-main"> sections … </div><aside class="stage"> … </aside></div>
